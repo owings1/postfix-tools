@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -e
+
+source "$(dirname "$0")/helpers/common.sh"
+
+thisdir="$(abs `dirname "$0"`)"
+confdir=`postconf -h config_directory`
+dhdir="$confdir/ssl/dh"
+outdir="$dhdir/$(date_path)"
+
+mkdir -pv "$dhdir"
+mkdir -v "$outdir"
+openssl dhparam -5 -check -out "$outdir/dh512.pem" 512
+openssl dhparam -5 -check -out "$outdir/dh1024.pem" 1024
+
+echo "Marking new files as active"
+pushd "$dhdir" > /dev/null
+rm -f active
+ln -s "$(basename "$outdir")" active
+popd > /dev/null
+
+postfix_reload

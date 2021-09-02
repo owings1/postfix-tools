@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -e
+
+source "$(dirname "$0")/helpers/common.sh"
+
+host="$(hostname)"
+readarray -t ports < <(postfix_smtp_ports)
+
+exitcode=0
+
+for port in "${ports[@]}"; do
+    echo -e "${cWhiteBright}Checking TLS on port${cReset} ${cCyan}${port}${cReset}"
+    set +e
+    openssl s_client -connect "$host:$port" \
+        -verify_return_error \
+        -starttls smtp < /dev/null
+    code="$?"
+    set -e
+    if [[ "$code" = 0 ]]; then
+        echo -e "${cGreen}PASS${cReset} TLS passed on port" \
+            "${cCyan}${port}${cReset}"
+    else
+        exitcode="$code"
+        echo -e "${cRed}ERROR${cReset} TLS failed on port" \
+            "${cYellow}${port}${cReset} with exit code ${code}"
+    fi
+done
+
+if [[ "$exitcode" != 0 ]]; then
+    echo -e "${cRed}TLS check failed!${cReset}"
+fi
+exit "$exitcode"

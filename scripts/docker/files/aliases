@@ -1,0 +1,16 @@
+# See man 5 aliases for format
+abuse: root
+ftp: root
+hostmaster: root
+mailer-daemon: postmaster
+news: root
+nobody: root
+noc: root
+postfix: root
+postmaster: root
+security: root
+usenet: root
+webmaster: root
+www: webmaster
+file-test-q6e7WSgPLKXeerR2EnAMPaj4d6kHbMAk: /tmp/postfix-file-test
+null-test-y6nJszj32UWhczSsHTZZmcPGqcUhGs7R: /dev/null

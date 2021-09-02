@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -e
+
+source "$(dirname "$0")/helpers/common.sh"
+
+srcdir="$USER_SOURCE"
+thisdir="$(abs `dirname "$0"`)"
+confdir=`postconf -h config_directory`
+outdir="$confdir/history/$(date_path)"
+helpers="$thisdir/helpers"
+
+echo "Writing update to $outdir"
+mkdir -p "$outdir/tmp"
+postconf -n > "$outdir/tmp/main.old"
+postconf -n -c "$srcdir" > "$outdir/tmp/main.src"
+"$helpers/config_diff" "$outdir/tmp/main.old" "$outdir/tmp/main.src" "$outdir"
+"$helpers/files_diff" "$confdir" "$outdir"
+
+echo "Appling reconfigure"
+ls "$outdir"/*.commit.sh 2>/dev/null | while read f; do
+    echo "[apply] $(basename "$f")"
+    bash "$f"
+done
+
+echo "Marking as latest"
+pushd "$outdir/.." > /dev/null
+rm -f latest
+ln -s "$(basename "$outdir")" latest
+popd > /dev/null
+
+echo "Update postmaps"
+"$helpers/post_maps" "$confdir"
+
+postfix_reload

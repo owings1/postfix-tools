@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+import os.path
+import shlex
+from shutil import copy2 as copy
+import sys
+
+from common import exists, meta, md5file, pjoin, qline, wrfile, wrjson
+
+class Result(object):
+
+    def __init__(self, src, dest):
+        self.src = src
+        self.dest = dest
+        self.srcmd5 = self.destmd5 = None
+
+    def build(self):
+        if exists(self.src):
+            self.srcmd5 = md5file(self.src)
+        if exists(self.dest):
+            self.destmd5 = md5file(self.dest)
+        self.is_same = self.srcmd5 == self.destmd5
+        is_new = not bool(self.destmd5)
+        self.info = {
+            'filename'  : os.path.basename(self.src),
+            'is_new'    : is_new,
+            'is_update' : not is_new and self.srcmd5 != self.destmd5,
+            'is_same'   : self.is_same,
+            'md5s': {
+                'old': self.srcmd5,
+                'new': self.destmd5
+            }
+        }
+        return self
+
+def cppatch(fromdir, todir, files):
+    return '\n'.join([
+        ' '.join(('cd', shlex.quote(fromdir), '&& install -v -p -m 0644 \\')),
+        *[qline(os.path.basename(file)) for file in sorted(files)],
+        qline(todir, True)
+    ])
+
+def main():
+    destdir, outdir = sys.argv[1:3]
+    filesdir = meta.filesdir
+    commitdir = pjoin(outdir, 'files.commit.d')
+    revertdir = pjoin(outdir, 'files.revert.d')
+    jsonfile = pjoin(outdir, 'files.json')
+    commitfile = pjoin(outdir, 'files.commit.sh')
+    revertfile = pjoin(outdir, 'files.revert.sh')
+    results = []
+    for fname in os.listdir(filesdir):
+        src = pjoin(filesdir, fname)
+        dest = pjoin(destdir, fname)
+        res = Result(src, dest).build()
+        if not res.is_same or meta.forcefiles:
+            results.append(res)
+    added = [res.src for res in results if res.info['is_new']]
+    changed = [res.src for res in results if res.info['is_update']]
+    forced = [res.src for res in results if meta.forcefiles and res.info['is_same']]
+    if added or changed or forced:
+        wrfile(commitfile, cppatch(commitdir, destdir, set(added).union(changed).union(forced)))
+        os.mkdir(commitdir)
+        for srcfile in added:
+            copy(srcfile, commitdir)
+        for srcfile in forced:
+            copy(srcfile, commitdir)
+        if changed:
+            wrfile(revertfile, cppatch(revertdir, destdir, set(changed)))
+            os.mkdir(revertdir)
+            for srcfile in changed:
+                copy(srcfile, commitdir)
+                copy(srcfile, revertdir)
+        infos = sorted([res.info for res in results], key=lambda info: info['filename'])
+        wrjson(jsonfile, {'files': infos})
+
+if  __name__ == '__main__':
+    main()

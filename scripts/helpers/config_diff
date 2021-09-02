@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+import os.path
+import shlex
+import sys
+
+from common import meta, pjoin, qline, wrfile
+
+def parse_maincf(file):
+    data = {}
+    with open(file) as reader:
+        for line in reader.readlines():
+            key, value = (part.strip() for part in line.split('=', 1))
+            if key not in meta.ignorekeys:
+                data[key] = value
+    return data
+
+def eqstr(entry):
+    return ' = '.join(entry)
+
+def rmpatch(keys):
+    return '\n'.join((
+        'postconf -X \\',
+        *[qline(key) for key in keys[0:-1]],
+        qline(keys[-1], True),
+    ))
+
+def udpatch(data, keys = None):
+    entries = [(key, data[key]) for key in sorted(keys or data)]
+    return '\n'.join((
+        'postconf -e \\',
+        *[qline(eqstr(entry)) for entry in entries[0:-1]],
+        qline(eqstr(entries[-1]), True),
+    ))
+
+def diffline(key, a, b):
+    if key in a and key in b:
+        val = b[key]
+        mark = 'F' if a[key] == b[key] else '>'
+    elif key in b:
+        mark, val = ('+', b[key])
+    else:
+        mark, val = ('-', a[key])
+    return ' '.join((mark, eqstr((key, val))))
+
+def main():
+    outdir = sys.argv[3]
+    a, b = (parse_maincf(file) for file in sys.argv[1:3])
+    commitfile = pjoin(outdir, 'config.commit.sh')
+    revertfile = pjoin(outdir, 'config.revert.sh')
+    difffile = pjoin(outdir, 'config.diff.txt')
+    added = {key: b[key] for key in b if key not in a}
+    changed = {key: b[key] for key in b if key in a and a[key] != b[key]}
+    forced = {key: b[key] for key in b if meta.forceconfig and key in a and a[key] == b[key]}
+    removed = {key: a[key] for key in a if key not in b}
+    is_change = bool(added or changed or removed)
+    if is_change or forced:
+        commits = []
+        reverts = []
+        if added or changed or forced:
+            commits.append(udpatch(b, set(added).union(changed).union(forced)))
+        if removed:
+            commits.append(rmpatch(sorted(removed)))
+        if removed or changed:
+            reverts.append(udpatch(a, set(removed).union(changed)))
+        if added:
+            reverts.append(rmpatch(sorted(added)))
+        diff = [
+            diffline(key, a, b) for key in sorted(set(a).union(b))
+        ]
+        wrfile(commitfile, *commits)
+        wrfile(revertfile, *reverts)
+        wrfile(difffile, *diff)
+
+if  __name__ == '__main__':
+    main()

@@ -1,0 +1,10 @@
+{
+  "hashfiles": [
+    "client_checks",
+    "sender_checks",
+    "virtual"
+  ],
+  "ignorekeys": [
+    "maillog_file"
+  ]
+}
