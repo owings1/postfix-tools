@@ -26,8 +26,12 @@ if [[ -t 0 ]]; then
     cWhiteBright='\u001b[37;1m'
 fi
 
-if [[ -z "$USER_SOURCE" ]]; then
-    echo "${cRed}ERROR${cReset} USER_SOURCE not set" >&2
+if [[ -z "$CONFIG_REPO" ]]; then
+    CONFIG_REPO="/etc/postfix/repo"
+fi
+
+if [[ ! -e "$CONFIG_REPO" ]]; then
+    echo "${cRed}ERROR${cReset} $CONFIG_REPO does not exist" >&2
     exit 1
 fi
 

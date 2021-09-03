@@ -15,7 +15,7 @@ RUN apt update && apt install -y --no-install-recommends \
 RUN apt update && apt install -y curl telnet less nano
 
 EXPOSE 25 587
-ENV USER_SOURCE /source
+ENV CONFIG_REPO /source
 WORKDIR /app
 COPY . .
 RUN scripts/docker/init.sh

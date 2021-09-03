@@ -4,7 +4,7 @@ set -e
 
 source "$(dirname "$0")/helpers/common.sh"
 
-srcdir="$USER_SOURCE"
+srcdir="$CONFIG_REPO"
 thisdir="$(abs `dirname "$0"`)"
 confdir=`postconf -h config_directory`
 outdir="$confdir/history/$(date_path)"

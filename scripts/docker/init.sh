@@ -12,8 +12,8 @@ newaliases
 popdq
 
 # source
-mkdir -p "$USER_SOURCE/files"
-pushdq "$USER_SOURCE"
+mkdir -p "$CONFIG_REPO/files"
+pushdq "$CONFIG_REPO"
 cp "$dir_/files/meta.json" "$dir_/files/"*.cf .
 pushdq files
 touch client_checks destinations sender_checks virtual virtual_alias_domains
