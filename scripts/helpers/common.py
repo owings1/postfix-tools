@@ -20,7 +20,7 @@ def envbool(key):
 
 class AppMeta(object):
     def __init__(self):
-        self.srcdir = pabs(os.environ['CONFIG_REPO'])
+        self.srcdir = pabs(os.environ['CONFIG_REPO'] if 'CONFIG_REPO' in os.environ else '/etc/postfix/repo')
         metafile = pjoin(self.srcdir, 'meta.json')
         data = rdjson(metafile)
         self.hashfiles = data['hashfiles']
