@@ -20,8 +20,11 @@ touch client_checks destinations sender_checks virtual virtual_alias_domains
 popdq
 popdq
 
-# default ssl
+
 pushdq /etc/postfix
+# install config
+cp "$dir_/files/"*.cf .
+# default ssl
 mkdir -p ssl
 pushdq ssl
 mkdir -p certs/snakeoil dh/build

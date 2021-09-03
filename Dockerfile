@@ -12,7 +12,7 @@ RUN echo "postmaster: root" > /etc/aliases && \
 RUN apt update && apt install -y --no-install-recommends \
     libsasl2-modules sasl2-bin rsyslog libpam-pwquality libpam-cracklib
 
-RUN apt update && apt install -y telnet less nano
+RUN apt update && apt install -y curl telnet less nano
 
 EXPOSE 25 587
 ENV USER_SOURCE /source

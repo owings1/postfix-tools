@@ -7,6 +7,11 @@ testsaslauthd -u foo -p bar -f /var/spool/postfix/var/run/saslauthd/mux -s smtp
 
 https://wiki.debian.org/PostfixAndSASL
 
+https://www.linuxbabe.com/mail-server/secure-email-server-ubuntu-postfix-dovecot
+
+----
+
+
 ```
 apt install -y --no-install-recommends libsasl2-modules sasl2-bin
 ```

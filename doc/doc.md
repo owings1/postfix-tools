@@ -27,11 +27,24 @@
 `sudo postsuper -d ALL deferred`
 
 ```
-#-----------------------------------------------------------
-#
-#-------------------#
-# Check connection  #
-#-------------------#
+
+
+#--------------#
+# Check TLS    #
+#--------------#
+
+echo 'From: test <foo@mailer2>
+To: file-test <file-test-q6e7WSgPLKXeerR2EnAMPaj4d6kHbMAk@mailer2>
+Subject: test
+
+test curl message.' > /tmp/email.txt
+
+curl --url 'smtp://172.17.0.2:587' \
+  --user 'foo@mailer2:J97q$?E@J=' \
+  --mail-from 'foo@mailer2' \
+  --mail-rcpt 'foo@mailer2' \
+  --upload-file /tmp/email.txt
+
 
 openssl s_client -connect mail.dougowings.com:25 \
   -verify_return_error \
