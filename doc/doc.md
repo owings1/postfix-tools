@@ -1,3 +1,27 @@
+```
+openssl s_client -connect localhost:587 -starttls smtp
+helo localhost
+
+foo/J97q$?E@J=
+auth login
+Zm9v
+Sjk3cSQ/RUBKPQ==
+
+plain login
+AGZvbwBKOTdxJD9FQEo9
+
+
+
+mail from: <root@dev>
+rcpt to: <file-test-q6e7WSgPLKXeerR2EnAMPaj4d6kHbMAk@mailer2>
+RCPT TO: <kate@fabrikam.com>
+DATA
+Subject: test
+
+This is a test message.
+.
+```
+
 # Print postfix version
 
 `postconf mail_version`
@@ -33,8 +57,8 @@
 # Check TLS    #
 #--------------#
 
-echo 'From: test <foo@mailer2>
-To: file-test <file-test-q6e7WSgPLKXeerR2EnAMPaj4d6kHbMAk@mailer2>
+echo 'From: test <root@mail.dougowings.com>
+To: file-test <file-test-Lxeay2BddjjBpX3A9kvCjtDHcFVKu4Az@mail.dougowings.com>
 Subject: test
 
 test curl message.' > /tmp/email.txt
@@ -43,6 +67,12 @@ curl --url 'smtp://172.17.0.2:587' \
   --user 'foo@mailer2:J97q$?E@J=' \
   --mail-from 'foo@mailer2' \
   --mail-rcpt 'foo@mailer2' \
+  --upload-file - <<< \
+'From: test <root@mail.dougowings.com>
+To: file-test <file-test-Lxeay2BddjjBpX3A9kvCjtDHcFVKu4Az@mail.dougowings.com>
+Subject: test
+
+test curl message.'
   --upload-file /tmp/email.txt
 
 

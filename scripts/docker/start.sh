@@ -2,10 +2,20 @@
 
 source "$(dirname "$0")/../helpers/common.sh" || exit 1
 
+dir_="$(abs "$(dirname "$0")")"
+
+if [[ ! -e /etc/first-run ]]; then
+    "$dir_/first_run.sh"
+    touch /etc/first-run
+fi
+
 /app/scripts/reconfigure
 
 exit=0
-logfiles=(/var/log/syslog /var/log/auth.log /var/log/postfix.log)
+logfiles=(
+    /var/log/syslog /var/log/auth.log /var/log/postfix.log
+    /var/log/mail.log /var/log/mail.err
+)
 rm -f "${logfiles[@]}"
 touch "${logfiles[@]}"
 chown syslog:adm "${logfiles[@]}"
@@ -23,9 +33,14 @@ start_sasl() {
     service saslauthd start 2>&1 >> /var/log/syslog
 }
 
+start_dovecot() {
+    service dovecot start 2>&1 >> /var/log/syslog
+}
+
 stop_all() {
     postfix stop 2>&1 >> /var/log/syslog
     service saslauthd stop 2>&1 >> /var/log/syslog
+    service dovecot stop 2>&1 >> /var/log/syslog
     service rsyslog stop 2>&1 >> /var/log/syslog
     kill -SIGTERM "$logpid"
 }
@@ -57,6 +72,7 @@ logpid="$!"
 start_syslog
 start_postfix
 start_sasl
+start_dovecot
 
 trap on_sighup SIGHUP
 trap on_sigint SIGINT
