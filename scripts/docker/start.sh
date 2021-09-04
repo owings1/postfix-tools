@@ -2,6 +2,8 @@
 
 source "$(dirname "$0")/../helpers/common.sh" || exit 1
 
+alias log="/usr/bin/logger -it cmd"
+
 dir_="$(abs "$(dirname "$0")")"
 
 if [[ ! -e /etc/first-run ]]; then
@@ -9,70 +11,78 @@ if [[ ! -e /etc/first-run ]]; then
     touch /etc/first-run
 fi
 
-/app/scripts/reconfigure
+/app/scripts/reconfigure 2>&1 | logger -it reconfigure
 
 exit=0
+
+syslog="/var/log/syslog"
+pfxlog="/var/log/postfix.log"
+
 logfiles=(
-    /var/log/syslog /var/log/auth.log /var/log/postfix.log
-    /var/log/mail.log /var/log/mail.err
+    "$syslog"
+    /var/log/auth.log
+    "$pfxlog"
+    /var/log/mail.log
+    /var/log/mail.err
+    /var/log/dovecot.log
+    /var/log/dovecot.err
 )
 rm -f "${logfiles[@]}"
 touch "${logfiles[@]}"
 chown syslog:adm "${logfiles[@]}"
 
-start_syslog() {
-    service rsyslog start 2>&1 >> /var/log/syslog
-}
-
-start_postfix() {
-    postconf maillog_file=/var/log/postfix.log
-    postfix start 2>&1 >> /var/log/syslog
-}
-
-start_sasl() {
-    service saslauthd start 2>&1 >> /var/log/syslog
-}
-
-start_dovecot() {
-    service dovecot start 2>&1 >> /var/log/syslog
+start_all() {
+    service rsyslog start || return 1
+    log 'Starting services'
+    local ret=0
+    (
+        postconf -e "maillog_file = $pfxlog" &&
+        postfix start &&
+        service saslauthd start &&
+        service dovecot start || ret=1
+    ) 2>&1 | log
+    return "$ret"
 }
 
 stop_all() {
-    postfix stop 2>&1 >> /var/log/syslog
-    service saslauthd stop 2>&1 >> /var/log/syslog
-    service dovecot stop 2>&1 >> /var/log/syslog
-    service rsyslog stop 2>&1 >> /var/log/syslog
-    kill -SIGTERM "$logpid"
+    log 'Stopping services'
+    (
+        postfix stop ;
+        service saslauthd stop ;
+        service dovecot stop ;
+        service rsyslog stop
+    ) 2>&1 | log
 }
 
-reload() {
-    postfix reload 2>&1 >> /var/log/syslog
-    service saslauthd reload 2>&1 >> /var/log/syslog
+reload_all() {
+    (
+        postfix reload ;
+        service saslauthd reload ;
+        service dovecot reload
+    ) 2>&1 | log
 }
 
 on_sighup() {
-    echo "SIGHUP" >> /var/log/syslog
-    sleep 10
-    reload
+    log "SIGHUP"
+    reload_all
 }
 
 on_sigint() {
-    echo "SIGINT" >> /var/log/syslog
+    log "SIGTERM"
     stop_all
+    kill -SIGTERM "$logpid"
 }
 
 on_sigterm() {
-    echo "SIGTERM" >> /var/log/syslog
+    log "SIGTERM"
     stop_all
+    kill -SIGTERM "$logpid"
 }
 
 tail -f -n 100 "${logfiles[@]}" &
 logpid="$!"
 
-start_syslog
-start_postfix
-start_sasl
-start_dovecot
+start_all || log "FATAL: Some services failed to start" && exit 1
 
 trap on_sighup SIGHUP
 trap on_sigint SIGINT

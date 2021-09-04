@@ -10,16 +10,31 @@ files_="$dir_/files"
 adduser dovecot mail
 
 pushdq /etc/dovecot
+cp -ab "$files_/dovecot.conf" .
+pushdq conf.d
+cp -ab "$files_/"10-*.conf .
+cp "$files_/dh4096.pem" .
+popdq
+popdq
+
+# postconf
+postconf -e \
+    'smtpd_sasl_type = dovecot' \
+    'smtpd_sasl_path = private/auth' \
+    'mailbox_transport = lmtp:unix:private/dovecot-lmtp' \
+    'smtputf8_enable = no'
+
+# Edits:
+#
 # dovecot.conf
 # ------------
 #    protocols = imap lmtp
-cp -ab "$files_/dovecot.conf" .
-pushdq conf.d
-
+#
 # 10-mail.conf
 # ------------
 #     mail_location = maildir:~/Maildir
 #     mail_privileged_group = mail
+#
 # 10-master.conf
 # ------------
 #     service auth {
@@ -36,33 +51,16 @@ pushdq conf.d
 #        group = postfix
 #       }
 #     }
+#
 # 10-auth.conf
 # ------------
 #     disable_plaintext_auth = yes
 #     auth_username_format = %n
 #     auth_mechanisms = plain login
+#
 # 10-ssl.conf
 # ------------
 #     ssl = yes
 #     ssl_prefer_server_ciphers = yes
 #     ssl_min_protocol = TLSv1.2
-#   TODO:
-#     ssl_cert = </etc/dovecot/private/dovecot.pem
-#     ssl_key = </etc/dovecot/private/dovecot.key
-cp -ab "$files_/"10-*.conf .
-popdq
-popdq
-
-
-# postconf
-postconf -e \
-    'mailbox_transport = lmtp:unix:private/dovecot-lmtp' \
-    'smtputf8_enable = no'
-
-
-# missing on minified system
-echo 'tty1
-tty2
-tty3
-tty4
-ttyS1' > /etc/securetty
+#     ssl_dh = </etc/dovecot/dh4096.pem

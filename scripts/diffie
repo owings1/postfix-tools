@@ -9,15 +9,26 @@ confdir=`postconf -h config_directory`
 dhdir="$confdir/ssl/dh"
 outdir="$dhdir/$(date_path)"
 
+echo "Generating new dhparams for postfix"
 mkdir -pv "$dhdir"
 mkdir -v "$outdir"
 openssl dhparam -5 -check -out "$outdir/dh512.pem" 512
 openssl dhparam -5 -check -out "$outdir/dh1024.pem" 1024
 
 echo "Marking new files as active"
-pushd "$dhdir" > /dev/null
+pushdq "$dhdir"
 rm -f active
 ln -s "$(basename "$outdir")" active
-popd > /dev/null
+popdq
 
 postfix_reload
+
+if is_dovecot; then
+    echo "Generating new dhparams for dovecot"
+    tmpfile="$(mktemp)"
+    dhfile="$(sed 's/<//' <<< "$(doveconf -h ssl_dh)")"
+    openssl dhparam -5 -check -out "$tmpfile" 4096
+    mv "$tmpfile" "$dhfile"
+    chmod 0644 "$dhfile"
+    dovecot_reload
+fi

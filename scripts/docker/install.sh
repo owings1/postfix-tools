@@ -10,18 +10,24 @@ files_="$dir_/files"
 
 pushdq /etc
 # chroot files
-cp services host.conf hosts localtime nsswitch.conf resolv.conf /var/spool/postfix/etc
+cp services host.conf hosts localtime nsswitch.conf resolv.conf \
+    /var/spool/postfix/etc
 popdq
+# missing on minified system
+echo 'tty1
+tty2
+tty3
+tty4
+ttyS1' > /etc/securetty
 
-pushdq "$dir_"
-# environment
-echo 'PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/app/scripts' > /etc/environment
+pushdq "$files_"
 # bashrc
-cp files/bashrc /root/.bashrc
-# aliases
-cp files/aliases /etc/aliases
+cp bashrc /root/.bashrc
+# aliases, environment
+cp aliases environment /etc
 newaliases
 popdq
+
 
 pushdq /etc/postfix
 # install config
@@ -37,9 +43,20 @@ cp /etc/ssl/certs/ssl-cert-snakeoil.pem snakeoil/server.crt
 cp snakeoil/server.crt snakeoil/ca.crt
 ln -s snakeoil active
 popdq
+# dh params
 pushdq dh
-cp "$files_/dh"* build
+cp "$files_/dh512.pem" "$files_/dh1024.pem" build
 ln -s build active
 popdq
 popdq
 popdq
+
+if is_dovecot || is_saslauthd ; then
+    "$dir_/sasl.sh"
+    if is_dovecot; then
+        "$dir_/dovecot.sh"
+    elif is_saslauthd; then
+        "$dir_/saslauthd.sh"
+    fi
+fi
+

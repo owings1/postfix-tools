@@ -2,6 +2,8 @@
 
 shopt -s expand_aliases
 
+alias doveconf=/usr/bin/doveconf
+alias dovecot=/usr/sbin/dovecot
 alias postfix=/usr/sbin/postfix
 alias postmap=/usr/sbin/postmap
 alias postconf=/usr/sbin/postconf
@@ -54,6 +56,22 @@ postfix_reload() {
     else
         echo "Postfix is not running"
     fi
+}
+
+is_dovecot() {
+    command -v /usr/sbin/saslauthd > /dev/null
+}
+
+is_saslauthd() {
+    command -v /usr/sbin/saslauthd > /dev/null
+}
+
+dovecot_reload() {
+    if is_dovecot; then
+        if service dovecot status; then
+            dovecot reload
+        fi
+    fi  
 }
 
 port_number() {

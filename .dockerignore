@@ -1,0 +1,11 @@
+/local
+/doc
+/.git
+Dockerfile
+*.dockerfile
+.gitignore
+.dockerignore
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
