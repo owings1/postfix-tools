@@ -27,17 +27,17 @@ pushdq "$files_"
 # bashrc
 cp bashrc /root/.bashrc
 # aliases, environment
+groupadd -g 500 postmaster || true
+useradd -m -g postmaster -s /bin/bash postmaster || true
 cp aliases environment /etc
 newaliases
 popdq
-
 
 pushdq /etc/postfix
 # install default config
 cp "$files_/"*.cf "$files_/destinations" .
 # must have new line at end of file
 echo >> main.cf
-#touch client_checks destinations sender_checks virtual virtual_alias_domains
 # default ssl
 mkdir -p ssl
 pushdq ssl
