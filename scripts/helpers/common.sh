@@ -59,7 +59,7 @@ postfix_reload() {
 }
 
 is_dovecot() {
-    command -v /usr/sbin/saslauthd > /dev/null
+    command -v /usr/sbin/dovecot > /dev/null
 }
 
 is_saslauthd() {
@@ -72,6 +72,12 @@ dovecot_reload() {
             dovecot reload
         fi
     fi  
+}
+
+md5cmp() {
+    [[ -e "$1" ]] &&
+    [[ -e "$2" ]] &&
+    [[ "$(md5sum < "$1")" = "$(md5sum < "$2")" ]]
 }
 
 port_number() {

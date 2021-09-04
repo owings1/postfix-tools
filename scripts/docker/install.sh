@@ -8,6 +8,9 @@ source "$(dirname "$0")/../helpers/common.sh"
 dir_="$(abs $(dirname "$0"))"
 files_="$dir_/files"
 
+# disable kernel logging for docker
+sed -i 's/^module.*"imklog".*/#\0/' /etc/rsyslog.conf
+
 pushdq /etc
 # chroot files
 cp services host.conf hosts localtime nsswitch.conf resolv.conf \
@@ -30,8 +33,10 @@ popdq
 
 
 pushdq /etc/postfix
-# install config
-cp "$files_/"*.cf .
+# install default config
+cp "$files_/"*.cf "$files_/destinations" .
+# must have new line at end of file
+echo >> main.cf
 #touch client_checks destinations sender_checks virtual virtual_alias_domains
 # default ssl
 mkdir -p ssl

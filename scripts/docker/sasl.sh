@@ -14,25 +14,24 @@ cp -b "$files_/common-password" .
 cp -an other smtp
 popdq
 
-# postfix main.cf - basically you want:
-#      smtpd_sasl_local_domain = $myhostname
-#      smtpd_sasl_auth_enable = yes
-#      broken_sasl_auth_clients = yes
-#      smtpd_sasl_security_options = noanonymous
-#      smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated reject_unauth_destination
 if [[ -z "$(postconf -h smtpd_sasl_local_domain)" ]]; then
     postconf -e 'smtpd_sasl_local_domain = $myhostname'
 fi
 postconf -e \
     'smtpd_sasl_auth_enable = yes' \
     'broken_sasl_auth_clients = yes' \
-    'smtpd_sasl_security_options = noanonymous noplaintext'
+    'smtpd_sasl_security_options = noanonymous'
 confkey='smtpd_relay_restrictions'
-restricts=('permit_mynetworks' 'permit_sasl_authenticated' 'reject_unauth_destination')
-newvalue="$(postconf -h "$confkey")"
-for val in "${restricts[@]}" ; do
-    if [[ ! "$newvalue" =~ "$val" ]]; then
-        newvalue="$newvalue $val"
-    fi
-done
-postconf -e "$confkey = $newvalue"
+confval='permit_sasl_authenticated'
+val="$(postconf -h "$confkey")"
+if [[ ! "$val" =~ "$confval" ]]; then
+    postconf -e "$confkey = $val $confval"
+fi
+
+# main.cf
+# --------
+#      smtpd_sasl_local_domain = $myhostname
+#      smtpd_sasl_auth_enable = yes
+#      broken_sasl_auth_clients = yes
+#      smtpd_sasl_security_options = noanonymous
+#      smtpd_relay_restrictions = permit_sasl_authenticated ...

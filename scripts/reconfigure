@@ -35,10 +35,17 @@ echo "Update postmaps"
 postfix_reload
 
 if is_dovecot ; then
-    "Updating dovecot config"
+    echo "Updating dovecot config"
     pushdq "$srcdir"
-    cp --preserve=timestamps -buv dovecot.conf /etc/dovecot
-    cp --preserve=timestamps -buv 10-*.conf /etc/dovecot/conf.d
+    opts="--preserve=timestamps -bv --suffix=.$(date_path)"
+    if ! md5cmp dovecot.conf /etc/dovecot/dovecot.conf ; then
+        cp $opts dovecot.conf /etc/dovecot
+    fi
+    ls 10-*.conf 2>/dev/null | while read f; do
+        if ! md5cmp "$f" "/etc/dovecot/conf.d/$f" ; then
+            cp $opts "$f" "/etc/dovecot/conf.d/$f"
+        fi
+    done
     popdq
 fi
             

@@ -5,7 +5,6 @@ compatibility_level = 2
 inet_interfaces = all
 inet_protocols = ipv4
 mailbox_size_limit = 0
-maillog_file = /var/log/postfix.log
 mydestination = ${config_directory}/destinations
 myhostname = localhost
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
@@ -16,7 +15,8 @@ smtp_tls_security_level = encrypt
 smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 smtpd_banner = $myhostname ESMTP $mail_name
 smtpd_recipient_restrictions = check_client_access hash:${config_directory}/client_checks check_sender_access hash:${config_directory}/sender_checks
-smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated reject_unauth_destination
+smtpd_relay_restrictions = permit_mynetworks reject_unauth_destination
+smtpd_reject_unlisted_recipient = yes
 smtpd_tls_CAfile = ${config_directory}/ssl/certs/active/ca.crt
 smtpd_tls_auth_only = yes
 smtpd_tls_cert_file = ${config_directory}/ssl/certs/active/server.crt
@@ -28,13 +28,3 @@ smtpd_tls_security_level = may
 smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
 virtual_alias_domains = ${config_directory}/virtual_alias_domains
 virtual_alias_maps = hash:${config_directory}/virtual
-
-# sasl
-broken_sasl_auth_clients = yes
-smtpd_sasl_auth_enable = yes
-smtpd_sasl_local_domain = $myhostname
-smtpd_sasl_security_options = noanonymous
-
-# dovecot
-mailbox_transport = lmtp:unix:private/dovecot-lmtp
-smtputf8_enable = no

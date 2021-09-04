@@ -1,19 +1,10 @@
 #!/bin/bash
 
+cp /etc/hosts /var/spool/postfix/etc/hosts
+
 source "$(dirname "$0")/../helpers/common.sh" || exit 1
 
-alias log="/usr/bin/logger -it cmd"
-
 dir_="$(abs "$(dirname "$0")")"
-
-if [[ ! -e /etc/first-run ]]; then
-    "$dir_/first_run.sh"
-    touch /etc/first-run
-fi
-
-/app/scripts/reconfigure 2>&1 | logger -it reconfigure
-
-exit=0
 
 syslog="/var/log/syslog"
 pfxlog="/var/log/postfix.log"
@@ -28,18 +19,32 @@ logfiles=(
     /var/log/dovecot.err
 )
 rm -f "${logfiles[@]}"
-touch "${logfiles[@]}"
-chown syslog:adm "${logfiles[@]}"
+#touch "${logfiles[@]}"
+#chown syslog:adm "${logfiles[@]}"
+
+service rsyslog start || exit 1
+alias log="/usr/bin/logger -it cmd"
+
+if [[ ! -e /etc/first-run ]]; then
+    "$dir_/first_run.sh" 2>&1 | logger -it first-run
+    touch /etc/first-run
+fi
+
+/app/scripts/reconfigure 2>&1 | logger -it reconfigure
+
+exit=0
 
 start_all() {
-    service rsyslog start || return 1
     log 'Starting services'
     local ret=0
     (
-        postconf -e "maillog_file = $pfxlog" &&
-        postfix start &&
-        service saslauthd start &&
-        service dovecot start || ret=1
+        postconf -e "maillog_file = $pfxlog"
+        postfix start || ret=1
+        if is_dovecot ; then
+            service dovecot start || ret=1
+        elif is_saslauthd ; then
+            service saslauthd start || ret=1
+        fi || ret=1
     ) 2>&1 | log
     return "$ret"
 }
@@ -48,8 +53,11 @@ stop_all() {
     log 'Stopping services'
     (
         postfix stop ;
-        service saslauthd stop ;
-        service dovecot stop ;
+        if is_dovecot ; then
+            service dovecot stop 
+        elif is_saslauthd ; then
+            service saslauthd stop
+        fi;
         service rsyslog stop
     ) 2>&1 | log
 }
@@ -57,8 +65,11 @@ stop_all() {
 reload_all() {
     (
         postfix reload ;
-        service saslauthd reload ;
-        service dovecot reload
+        if is_dovecot ; then
+            service dovecot reload
+        elif is_saslauthd ; then
+            service saslauthd reload
+        fi
     ) 2>&1 | log
 }
 
@@ -79,10 +90,10 @@ on_sigterm() {
     kill -SIGTERM "$logpid"
 }
 
-tail -f -n 100 "${logfiles[@]}" &
+tail -F -n 100 "${logfiles[@]}" 2>/dev/null &
 logpid="$!"
 
-start_all || log "FATAL: Some services failed to start" && exit 1
+start_all #|| echo "FATAL: Some services failed to start" >&2 && exit 1
 
 trap on_sighup SIGHUP
 trap on_sigint SIGINT
