@@ -18,19 +18,38 @@ def rdjson(file):
 def envbool(key):
     return key in os.environ and bool(os.environ[key])
 
+
+
 class AppMeta(object):
     def __init__(self):
-        self.srcdir = pabs(os.environ['CONFIG_REPO'] if 'CONFIG_REPO' in os.environ else '/etc/postfix/repo')
-        metafile = pjoin(self.srcdir, 'meta.json')
-        data = rdjson(metafile)
-        self.hashfiles = data['hashfiles']
-        self.ignorekeys = set(data['ignorekeys'])
-        self.ignorekeys.add('config_directory')
+        defaultfile = pjoin(os.path.dirname(pabs(__file__)), '../docker/files/meta.json')
+        defaults = self.defaults = rdjson(defaultfile)
+        if 'CONFIG_REPO' in os.environ:
+            self.srcdir = os.environ['CONFIG_REPO']
+        else:
+            self.srcdir = '/etc/postfix/repo'
         self.filesdir = pjoin(self.srcdir, 'files')
+        metafile = pjoin(self.srcdir, 'meta.json')
+        if exists(metafile):
+            data = rdjson(metafile)
+        else:
+            data = defaults
+        def getval(key):
+            return data[key] if key in data else defaults[key]
+
+        self.hashfiles = getval('hashfiles')
+        self.ignorekeys = set(getval('ignorekeys'))
+        self.ignorekeys.add('config_directory')
+        
         self.force = envbool('FORCE')
         self.forcefiles = self.force or envbool('FORCE_FILES')
         self.forceconfig = self.force or envbool('FORCE_CONFIG')
         self.forcemaps = self.force or envbool('FORCE_MAPS')
+        self.auth = getval('auth')
+        for key in defaults['auth']:
+            if key not in self.auth:
+                self.auth[key] = defaults['auth'][key]
+        self.data = data
 
 meta = AppMeta()
 
@@ -72,4 +91,3 @@ def wrfile(file, *lines):
 def wrjson(file, data):
     with open(file, 'w') as writer:
         json.dump(data, writer, indent=2)
-

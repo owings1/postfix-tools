@@ -7,6 +7,9 @@ source "$(dirname "$0")/../helpers/common.sh"
 dir_="$(abs $(dirname "$0"))"
 files_="$dir_/files"
 
+# default auth dir
+mkdir -p /etc/auth
+
 # pam
 pushdq /etc/pam.d
 cp -b "$files_/common-password" .

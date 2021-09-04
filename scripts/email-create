@@ -2,18 +2,31 @@
 
 set -e
 
-source "$(dirname "$0")/helpers/common.sh"
-gname="email"
-hdir="/home/$gname"
-pwlen="32"
-pwopts="-cnyBr='\"\\"
-
 username="$1"
 if [[ -z "$username" ]]; then
     echo "Usage: email-create <username>" >&2
     exit 1
 fi
+
+source "$(dirname "$0")/helpers/common.sh"
+
+thisdir="$(abs `dirname "$0"`)"
+
+alias metaval="$thisdir/helpers/metaval"
+
+pwdfile="$(metaval auth.file)"
+gname="$(metaval auth.group)"
+alg="$(metaval auth.alg)"
+pwopts="$(metaval auth.pwgenopts)"
+hdir="$(metaval auth.emaildir)"
+shell="$(metaval auth.shell)"
+pwlen="32"
+
 homedir="$hdir/$username"
+
+if [[ ! -e "$pwdfile" ]]; then
+    touch "$pwdfile" || exit 1
+fi
 
 gid="$(grep "^$gname:" /etc/group | awk -F: '{print $3}')"
 if [[ -z "$gid" ]]; then
@@ -22,16 +35,38 @@ if [[ -z "$gid" ]]; then
     groupadd -g "$gid" "$gname"
 fi
 
-lastid="$(awk -F: '{print $3":"$4}' /etc/passwd | grep ":$gid\$" | awk -F: '{print $1}' | sort | tail -n 1)"
+if grep -q "^$username:" "$pwdfile" ; then
+    echo "User $username already exists" >&2
+    exit 1
+fi
+
+lastid="$(awk -F: '{print $3":"$4}' "$pwdfile" | grep ":$gid\$" | awk -F: '{print $1}' | sort | tail -n 1)"
 if [[ -z "$lastid" ]]; then
     uid="601"
 else
     uid="$(expr "$lastid" + 1)"
 fi
 
-mkdir -pv "$hdir" >&2
-useradd -m -d "$homedir" -g "$gid" -u "$uid" -s /usr/sbin/nologin "$username"
 password="$(pwgen "$pwopts" "$pwlen" 1)"
-chpasswd <<< "$username:$password"
+mkdir -pv "$hdir" >&2
+
+if [[ "$pwdfile" = '/etc/passwd' ]]; then
+    echo "Creating system user $username with uid $uid" >&2
+    useradd -m -d "$homedir" -g "$gid" -u "$uid" -s "$shell" "$username"
+    chpasswd <<< "$username:$password"
+else
+    echo "Creating passwd-file user $username with uid $uid" >&2
+    password='Uns^W*H`%Ww|U@EPv3keu)/h:Rj%n73L'
+    input="$(echo -ne "$password\n$password\n")"
+    pwdhash="$(doveadm pw -s "$alg" <<< "$input")"
+    line="$username:$pwdhash:$uid:$gid::$homedir:$shell"
+    cp "$pwdfile" "$pwdfile~"
+    echo "$line" >> "$pwdfile"
+    mapfile="$pwdfile.map"
+    echo "Updating $(basename "$mapfile")" >&2
+    sed 's/:.*/ ./' "$pwdfile" > "$mapfile"
+    postmap "$mapfile"
+fi
+
 echo "Password for new user:" >&2
 echo "$password"

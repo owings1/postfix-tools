@@ -1,0 +1,52 @@
+#!/bin/bash
+
+set -e
+
+source "$(dirname "$0")/helpers/common.sh"
+
+thisdir="$(abs `dirname "$0"`)"
+alias metaval="$thisdir/helpers/metaval"
+pwdfile="$(metaval auth.file)"
+alg="$(metaval auth.alg)"
+
+username="$1"
+if [[ -z "$username" ]] || [[ ! -z "$2" ]] && [[ "$2" != "--stdin" ]]; then
+    echo "Usage: email-passwd <username> [--stdin]" >&2
+    exit 1
+fi
+
+if ! grep -q "^$username:" "$pwdfile" ; then
+    echo "$username not found" >&2
+    exit 1
+fi
+
+if [[ "$2" = "--stdin" ]]; then
+    read password <&0
+    set +e
+    msg="$(check_okpassword "$password")"
+    ret="$?"
+    set -e
+    if [[ "$ret" != 0 ]]; then
+        echo "Bad password: $msg" >&2
+        exit 1
+    fi
+fi
+
+if [[ "$pwdfile" = '/etc/passwd' ]]; then
+    if [[ -z "$password" ]]; then
+        passwd "$username"
+    else
+        chpasswd <<< "$username:$password"
+    fi
+else
+    if [[ -z "$password" ]]; then
+        pwdhash="$(doveadm pw -s "$alg")"
+        [[ "$?" = 0 ]] || exit 1
+    else
+        input="$(echo -ne "$password\n$password\n")"
+        pwdhash="$(doveadm pw -s "$alg" <<< "$input")"
+    fi
+    echo "s'^$username:[^:]*:(.*)'$username:$pwdhash:\1'" "$pwdfile"
+    cp "$pwdfile" "$pwdfile~"
+    sed -E -i "s'^$username:[^:]*:(.*)'$username:$pwdhash:\1'" "$pwdfile"
+fi

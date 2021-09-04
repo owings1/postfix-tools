@@ -36,16 +36,22 @@ postfix_reload
 
 if is_dovecot ; then
     echo "Updating dovecot config"
+    ischange=
     pushdq "$srcdir"
     opts="--preserve=timestamps -bv --suffix=.$(date_path)"
     if ! md5cmp dovecot.conf /etc/dovecot/dovecot.conf ; then
         cp $opts dovecot.conf /etc/dovecot
+        ischange=1
     fi
     ls 10-*.conf 2>/dev/null | while read f; do
         if ! md5cmp "$f" "/etc/dovecot/conf.d/$f" ; then
             cp $opts "$f" "/etc/dovecot/conf.d/$f"
+            ischange=1
         fi
     done
     popdq
+    if [[ ! -z "$ischange" ]]; then
+        dovecot_reload
+    fi
 fi
             

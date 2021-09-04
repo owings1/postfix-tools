@@ -2,6 +2,7 @@
 
 shopt -s expand_aliases
 
+alias doveadm=/usr/bin/doveadm
 alias doveconf=/usr/bin/doveconf
 alias dovecot=/usr/sbin/dovecot
 alias postfix=/usr/sbin/postfix
@@ -66,12 +67,27 @@ is_saslauthd() {
     command -v /usr/sbin/saslauthd > /dev/null
 }
 
+is_firstrun() {
+    [[ ! -e /etc/first-run ]]
+}
+
 dovecot_reload() {
     if is_dovecot; then
         if service dovecot status; then
             dovecot reload
         fi
-    fi  
+    fi
+}
+
+check_okpassword() {
+    local pwd="$1"
+    local raw="$(cracklib-check <<< "$pwd")"
+    if [[ "$(awk '{print $NF}' <<< "$raw")" = 'OK' ]]; then
+        return 0
+    fi
+    local idx="$(expr "${#pwd}" + 3)"
+    echo "$(cut "-c$idx-" <<< "$raw")"
+    return 1
 }
 
 md5cmp() {

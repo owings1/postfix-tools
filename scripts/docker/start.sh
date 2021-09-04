@@ -3,7 +3,7 @@
 cp /etc/hosts /var/spool/postfix/etc/hosts
 
 source "$(dirname "$0")/../helpers/common.sh" || exit 1
-alias log="/usr/bin/logger -it cmd"
+alias log="/usr/bin/logger -t coordinator"
 dir_="$(abs "$(dirname "$0")")"
 
 syslog="/var/log/syslog"
@@ -65,7 +65,7 @@ on_sigterm() {
 
 service rsyslog start || exit 1
 
-if [[ ! -e /etc/first-run ]]; then
+if is_firstrun ; then
     "$dir_/first_run.sh" 2>&1 | logger -t first-run
     touch /etc/first-run
 fi

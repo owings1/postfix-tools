@@ -4,7 +4,10 @@ set -e
 
 source "$(dirname "$0")/../helpers/common.sh"
 
+chown root:syslog /var/log
+chmod 0775 /var/log
 touch /var/log/syslog
+
 for file in "${APP_LOGS[@]}" ; do
     if [[ -e "$file" ]]; then
         chown syslog:adm "$file"

@@ -9,6 +9,9 @@ files_="$dir_/files"
 
 echo "First run ..."
 
+groupadd -g 500 postmaster || true
+useradd -m -g postmaster -s /bin/bash postmaster || true
+
 # source
 mkdir -p "$CONFIG_REPO/files"
 pushdq "$CONFIG_REPO"

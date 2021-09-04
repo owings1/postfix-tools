@@ -27,8 +27,6 @@ pushdq "$files_"
 # bashrc
 cp bashrc /root/.bashrc
 # aliases, environment
-groupadd -g 500 postmaster || true
-useradd -m -g postmaster -s /bin/bash postmaster || true
 cp aliases environment /etc
 newaliases
 popdq
