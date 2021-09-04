@@ -56,12 +56,13 @@ if [[ "$pwdfile" = '/etc/passwd' ]]; then
     chpasswd <<< "$username:$password"
 else
     echo "Creating passwd-file user $username with uid $uid" >&2
-    password='Uns^W*H`%Ww|U@EPv3keu)/h:Rj%n73L'
     input="$(echo -ne "$password\n$password\n")"
     pwdhash="$(doveadm pw -s "$alg" <<< "$input")"
     line="$username:$pwdhash:$uid:$gid::$homedir:$shell"
     cp "$pwdfile" "$pwdfile~"
     echo "$line" >> "$pwdfile"
+    mkdir -pv "$homedir"
+    chown "$uid:$gid" "$homedir"
     mapfile="$pwdfile.map"
     echo "Updating $(basename "$mapfile")" >&2
     sed 's/:.*/ ./' "$pwdfile" > "$mapfile"

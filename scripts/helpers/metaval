@@ -14,6 +14,12 @@ def main():
         print(str(meta.auth['gid']))
     elif key == 'auth.pwgenopts':
         print(meta.auth['pwgenopts'])
+    elif key == 'auth.emaildir':
+        print(meta.auth['emaildir'])
+    elif key == 'auth.shell':
+        print(meta.auth['shell'])
+    else:
+        raise Exception("unknown key " + key)
 
 if  __name__ == '__main__':
     main()

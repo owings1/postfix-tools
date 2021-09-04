@@ -41,12 +41,12 @@ if is_dovecot ; then
     opts="--preserve=timestamps -bv --suffix=.$(date_path)"
     if ! md5cmp dovecot.conf /etc/dovecot/dovecot.conf ; then
         cp $opts dovecot.conf /etc/dovecot
-        ischange=1
+        ischange=true
     fi
     ls 10-*.conf 2>/dev/null | while read f; do
         if ! md5cmp "$f" "/etc/dovecot/conf.d/$f" ; then
             cp $opts "$f" "/etc/dovecot/conf.d/$f"
-            ischange=1
+            ischange=true
         fi
     done
     popdq
