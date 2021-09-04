@@ -101,3 +101,13 @@ pushdq() {
 popdq() {
     popd > /dev/null
 }
+
+APP_LOGS=(
+    /var/log/auth.log
+    /var/log/dovecot.err
+    /var/log/dovecot.log
+    /var/log/mail.err
+    /var/log/mail.log
+    /var/log/postfix.log
+    /var/log/syslog
+)
