@@ -12,7 +12,7 @@
     "alg": "SHA512-CRYPT",
     "group": "email",
     "gid": 515,
-    "pwgenopts": "-scnyBr='\"\\\`|}{/",
+    "pwgenopts": "-scnyBr='\"\\`|}{/",
     "emaildir": "/home/email",
     "shell": "/usr/sbin/nologin"
   }
