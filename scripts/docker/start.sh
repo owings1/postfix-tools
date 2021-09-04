@@ -21,6 +21,8 @@ logfiles=(
 rm -f "${logfiles[@]}"
 #touch "${logfiles[@]}"
 #chown syslog:adm "${logfiles[@]}"
+touch "$syslog"
+chown syslog:adm "$syslog"
 
 service rsyslog start || exit 1
 alias log="/usr/bin/logger -it cmd"
