@@ -71,6 +71,10 @@ is_firstrun() {
     [[ ! -e /etc/first-run ]]
 }
 
+is_docker() {
+    grep -sq 'docker\|lxc' /proc/1/cgroup
+}
+
 dovecot_reload() {
     if is_dovecot; then
         if service dovecot status; then
