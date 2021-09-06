@@ -24,6 +24,9 @@ tty4
 ttyS1' > /etc/securetty
 
 pushdq "$files_"
+# nano syntax
+mkdir -p /usr/shar/nano
+cp postfixmain.nanorc /usr/shar/nano
 # bashrc
 cp bashrc /root/.bashrc
 # aliases, environment
