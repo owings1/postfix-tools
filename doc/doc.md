@@ -134,6 +134,7 @@ cat \
   | sudo tee ca.crt
 sudo chmod 0644 *.crt
 sudo ln -s mail_dougowings_com.crt server.crt
+cat server.crt ca.crt | sudo tee server.chained.crt
 cd ..
 sudo rm active
 sudo ln -s "$dname" active

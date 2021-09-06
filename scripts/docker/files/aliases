@@ -1,4 +1,6 @@
 # See man 5 aliases for format
+#postmaster: ????
+administrator: postmaster
 abuse: postmaster
 ftp: postmaster
 hostmaster: postmaster
@@ -7,7 +9,6 @@ news: postmaster
 nobody: postmaster
 noc: postmaster
 postfix: postmaster
-postmaster: postmaster
 security: postmaster
 usenet: postmaster
 webmaster: postmaster

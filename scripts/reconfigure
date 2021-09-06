@@ -17,6 +17,8 @@ postconf -n -c "$srcdir" > "$outdir/tmp/main.src"
 "$helpers/config_diff" "$outdir/tmp/main.old" "$outdir/tmp/main.src" "$outdir"
 "$helpers/files_diff" "$confdir" "$outdir"
 
+find "$outdir" -type f -print0 | xargs -0 chmod 0644
+
 echo "Appling reconfigure"
 ls "$outdir"/*.commit.sh 2>/dev/null | while read f; do
     echo "[apply] $(basename "$f")"
