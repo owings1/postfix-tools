@@ -80,7 +80,6 @@ if is_firstrun ; then
         echo "FATAL: first_run.sh failed" >&2
         exit=1
     fi
-    
 fi
 
 if ! LOGONLY=1 /app/scripts/reconfigure ; then

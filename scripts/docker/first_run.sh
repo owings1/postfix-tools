@@ -1,20 +1,31 @@
 #!/bin/bash
-
-set -e
-
 source "$(dirname "$0")/../helpers/common.sh"
+shopt -s expand_aliases
+alias logger="/usr/bin/logger -t first-run"
 
-dir_="$(abs "$(dirname "$0")")"
-files_="$dir_/files"
-alias metaval="$dir_/../helpers/metaval"
+log() {
+    local priority="$1"
+    local msg
+    while read msg ; do
+        logger -p "$priority" "$msg"
+    done
+}
 
-{
+run() {
+    {
+        _run 2>&1 1>&3 3>&- | log err
+    } 3>&1 1>&2 | log notice
+}
+
+_run() {
+    set -e
     echo  "First run ..."
-
+    local dir_="$(abs "$(dirname "$0")")"
+    local files_="$dir_/files"
+    alias metaval="$dir_/../helpers/metaval"
     groupadd -g 500 postmaster || true
     useradd -m -g postmaster -s /bin/bash postmaster || true
 
-    #sleep 30
     # source
     mkdir -pv "$CONFIG_REPO/files"
     pushdq "$CONFIG_REPO"
@@ -34,11 +45,13 @@ alias metaval="$dir_/../helpers/metaval"
     popdq
 
     if is_dovecot ; then
-        pwdfile="$(metaval auth.file)"
-        authdir="$(dirname "$pwdfile")"
+        local pwdfile="$(metaval auth.file)"
+        local authdir="$(dirname "$pwdfile")"
         # default auth dir
         mkdir -pv "$authdir"
         touch "$pwdfile" "$pwdfile.map"
         passwd_map "$pwdfile"
     fi
-} 2>&1 | /usr/bin/logger -t first-run
+}
+
+run

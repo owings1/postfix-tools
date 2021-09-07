@@ -4,30 +4,38 @@ set -e
 
 source "$(dirname "$0")/helpers/common.sh"
 
-host="$(hostname)"
-readarray -t ports < <(postfix_smtp_ports)
-
-if [[ "${#ports[@]}" = 0 ]]; then
-    echo -e "${cRed}ERROR${cReset} No SMTP ports found" >&2
-    exit 1
+declare -a servers
+if [[ -z "$1" ]]; then
+    host="$(hostname)"
+    readarray -t ports < <(postfix_smtp_ports)
+    if [[ "${#ports[@]}" = 0 ]]; then
+        echo -e "${cRed}ERROR${cReset} No SMTP ports found" >&2
+        exit 1
+    fi
+    for port in "${ports[@]}"; do
+        servers+=("$host:$port")
+    done
+else
+    readarray -t servers <<< "$@"
 fi
+
 exitcode=0
 
-for port in "${ports[@]}"; do
-    echo -e "${cWhiteBright}Checking TLS on port${cReset} ${cCyan}${port}${cReset}"
+for server in "${servers[@]}"; do
+    echo -e "${cWhiteBright}Checking TLS on${cReset} ${cCyan}${server}${cReset}"
     set +e
-    openssl s_client -connect "$host:$port" \
+    openssl s_client -connect "$server" \
         -verify_return_error \
-        -starttls smtp < /dev/null
+        -starttls smtp <<< QUIT
     code="$?"
     set -e
     if [[ "$code" = 0 ]]; then
-        echo -e "${cGreen}PASS${cReset} TLS passed on port" \
-            "${cCyan}${port}${cReset}"
+        echo -e "${cGreen}PASS${cReset} TLS passed for" \
+            "${cCyan}${server}${cReset}"
     else
         exitcode="$code"
-        echo -e "${cRed}ERROR${cReset} TLS failed on port" \
-            "${cYellow}${port}${cReset} with exit code ${code}"
+        echo -e "${cRed}ERROR${cReset} TLS failed for" \
+            "${cYellow}${server}${cReset} with exit code ${code}"
     fi
 done
 

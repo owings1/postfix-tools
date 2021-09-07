@@ -13,6 +13,7 @@ log() {
     local fdn
     local priority="$1"
     local msg
+    local pfx
     if [[ "$priority" = err ]]; then
         fdn=2
         pfx="${cRed}ERROR${cReset} "
@@ -33,11 +34,11 @@ run() {
 
 _run() {
     set -e
-    srcdir="$CONFIG_REPO"
-    thisdir="$(abs `dirname "$0"`)"
-    confdir=`postconf -h config_directory`
-    outdir="$confdir/history/$(date_path)"
-    helpers="$thisdir/helpers"
+    local srcdir="$CONFIG_REPO"
+    local thisdir="$(abs `dirname "$0"`)"
+    local confdir=`postconf -h config_directory`
+    local outdir="$confdir/history/$(date_path)"
+    local helpers="$thisdir/helpers"
 
     echo "Writing update to $outdir"
     mkdir -p "$outdir/tmp"
@@ -48,7 +49,7 @@ _run() {
 
     find "$outdir" -type f -print0 | xargs -0 chmod 0644
 
-    echo "Appling reconfigure"
+    echo "Applying reconfigure"
     ls "$outdir"/*.commit.sh 2>/dev/null | while read f; do
         echo "[apply] $(basename "$f")"
         bash "$f"
@@ -60,14 +61,14 @@ _run() {
     ln -s "$(basename "$outdir")" latest
     popdq
 
-    echo "Update postmaps"
+    echo "Updating postmaps"
     "$helpers/post_maps" "$confdir"
 
     postfix_reload
 
+    local ischange=
     if is_dovecot ; then
         echo "Updating dovecot config"
-        ischange=
         pushdq "$srcdir"
         opts="--preserve=timestamps -bv --suffix=.$(date_path)"
         if ! md5cmp dovecot.conf /etc/dovecot/dovecot.conf ; then
