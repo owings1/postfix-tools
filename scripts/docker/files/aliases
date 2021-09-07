@@ -1,5 +1,6 @@
 # See man 5 aliases for format
 #postmaster: ????
+root: postmaster
 administrator: postmaster
 abuse: postmaster
 ftp: postmaster

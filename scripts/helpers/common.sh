@@ -8,6 +8,7 @@ alias dovecot=/usr/sbin/dovecot
 alias postfix=/usr/sbin/postfix
 alias postmap=/usr/sbin/postmap
 alias postconf=/usr/sbin/postconf
+alias service=/usr/sbin/service
 
 abs() {
     echo `cd "$1" && pwd`
@@ -150,10 +151,11 @@ if is_saslauthd; then
     SASL_SPOOL="/var/spool/postfix/var/run/saslauthd"
 fi
 
-APP_LOGS=(
-    coordinator.log
-    auth.log
-)
+declare -a APP_LOGS
+if is_docker ; then
+    APP_LOGS+=(coordinator.log syslog)
+fi
+APP_LOGS+=(auth.log)
 if is_dovecot; then
     APP_LOGS+=(
         dovecot.debug
@@ -166,9 +168,6 @@ APP_LOGS+=(
     postfix.log
     postfix.err
     reconfigure.log
-    mail.err
-    mail.log
-    syslog
 )
     
 if [[ -t 0 ]]; then

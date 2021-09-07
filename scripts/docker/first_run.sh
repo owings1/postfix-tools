@@ -24,7 +24,7 @@ _run() {
     local files_="$dir_/files"
     alias metaval="$dir_/../helpers/metaval"
     groupadd -g 500 postmaster || true
-    useradd -m -g postmaster -s /bin/bash postmaster || true
+    useradd -m -g postmaster -s /usr/sbin/nologin postmaster || true
 
     # source
     mkdir -pv "$CONFIG_REPO/files"
