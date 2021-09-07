@@ -39,7 +39,7 @@ _run() {
     outdir="$confdir/history/$(date_path)"
     helpers="$thisdir/helpers"
 
-    echo "Writing update to $outdir" >&2
+    echo "Writing update to $outdir"
     mkdir -p "$outdir/tmp"
     postconf -n > "$outdir/tmp/main.old"
     postconf -n -c "$srcdir" > "$outdir/tmp/main.src"
