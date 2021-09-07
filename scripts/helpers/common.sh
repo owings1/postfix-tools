@@ -34,7 +34,7 @@ if [[ -z "$CONFIG_REPO" ]]; then
 fi
 
 if [[ ! -e "$CONFIG_REPO" ]]; then
-    echo "${cRed}ERROR${cReset} $CONFIG_REPO does not exist" >&2
+    echo -e "${cRed}ERROR${cReset} $CONFIG_REPO does not exist" >&2
     exit 1
 fi
 
@@ -46,17 +46,6 @@ abs() {
 
 date_path() {
     date +"%Y-%m-%d-%H-%M-%s"
-}
-
-postfix_reload() {
-    echo "Checking if postfix is up"
-    if postfix status; then
-        echo "Reloading config"
-        postfix reload
-        echo "Reconfigured"
-    else
-        echo "Postfix is not running"
-    fi
 }
 
 is_dovecot() {
@@ -75,11 +64,63 @@ is_docker() {
     grep -sq 'docker\|lxc' /proc/1/cgroup
 }
 
+is_systemd() {
+    pidof systemd > /dev/null
+}
+
+service_up() {
+    if is_systemd; then
+        systemctl is-active "$1" > /dev/null
+    else
+        service "$1" status
+    fi
+}
+
+service_reload() {
+    if is_systemd ; then
+        systemctl reload "$1"
+    else
+        service "$1" reload
+    fi
+}
+
+service_start() {
+    if is_systemd ; then
+        systemctl start "$1"
+    else
+        service "$1" start
+    fi
+}
+
+service_stop() {
+    if is_systemd ; then
+        systemctl stop "$1"
+    else
+        service "$1" stop
+    fi
+}
+
 dovecot_reload() {
     if is_dovecot; then
-        if service dovecot status; then
-            dovecot reload
+        echo "Checking if dovecot is up"
+        if service_up dovecot; then
+            echo "Reloading dovecot config"
+            service_reload dovecot
+            echo "Reloaded dovecot config"
+        else
+            echo "Dovecot is not running"
         fi
+    fi
+}
+
+postfix_reload() {
+    echo "Checking if postfix is up"
+    if service_up postfix; then
+        echo "Reloading postfix config"
+        service_reload postfix
+        echo "Reloaded postfix config"
+    else
+        echo "Postfix is not running"
     fi
 }
 
@@ -92,6 +133,14 @@ check_okpassword() {
     local idx="$(expr "${#pwd}" + 3)"
     echo "$(cut "-c$idx-" <<< "$raw")"
     return 1
+}
+
+passwd_map() {
+    local pwdfile="$1"
+    local mapfile="$pwdfile.map"
+    sed 's/:.*/ ./' "$pwdfile" > "$mapfile" &&
+    postmap "$mapfile" &&
+    echo "Updated passwd map" >&2
 }
 
 md5cmp() {
@@ -110,7 +159,7 @@ port_number() {
 }
 
 postfix_smtp_ports() {
-    postconf -F '*/inet/command' | grep ' = smtpd$' | sed 's-/.*--' |
+    postconf -F '*/inet/command' | grep -P ' = smtpd($|\s)' | sed 's-/.*--' |
     while read port; do port_number "$port"; done
 }
 
@@ -123,11 +172,22 @@ popdq() {
 }
 
 APP_LOGS=(
-    /var/log/auth.log
-    /var/log/dovecot.err
-    /var/log/dovecot.log
-    /var/log/mail.err
-    /var/log/mail.log
-    /var/log/postfix.log
-    /var/log/syslog
+    coordinator.log
+    auth.log
+)
+if is_dovecot; then
+    APP_LOGS+=(
+        dovecot.debug
+        dovecot.log
+        dovecot.err
+    )
+fi
+APP_LOGS+=(
+    postfix.debug
+    postfix.log
+    postfix.err
+    reconfigure.log
+    mail.err
+    mail.log
+    syslog
 )

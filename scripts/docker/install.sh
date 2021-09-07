@@ -10,6 +10,8 @@ files_="$dir_/files"
 
 # disable kernel logging for docker
 sed -i 's/^module.*"imklog".*/#\0/' /etc/rsyslog.conf
+# copy rsyslog conf
+cp "$files_/40-custom.conf" /etc/rsyslog.d/
 
 pushdq /etc
 # chroot files

@@ -7,6 +7,10 @@ source "$(dirname "$0")/helpers/common.sh"
 host="$(hostname)"
 readarray -t ports < <(postfix_smtp_ports)
 
+if [[ "${#ports[@]}" = 0 ]]; then
+    echo -e "${cRed}ERROR${cReset} No SMTP ports found" >&2
+    exit 1
+fi
 exitcode=0
 
 for port in "${ports[@]}"; do

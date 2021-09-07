@@ -1,59 +1,90 @@
 #!/bin/bash
-
-set -e
-
 source "$(dirname "$0")/helpers/common.sh"
+shopt -s expand_aliases
+alias logger="/usr/bin/logger -t reconfigure"
 
-srcdir="$CONFIG_REPO"
-thisdir="$(abs `dirname "$0"`)"
-confdir=`postconf -h config_directory`
-outdir="$confdir/history/$(date_path)"
-helpers="$thisdir/helpers"
+if [[ -t 0 ]] && [[ -z "$LOGONLY" ]]; then
+    alias write="echo -e"
+else
+    alias write="true"
+fi
 
-echo "Writing update to $outdir"
-mkdir -p "$outdir/tmp"
-postconf -n > "$outdir/tmp/main.old"
-postconf -n -c "$srcdir" > "$outdir/tmp/main.src"
-"$helpers/config_diff" "$outdir/tmp/main.old" "$outdir/tmp/main.src" "$outdir"
-"$helpers/files_diff" "$confdir" "$outdir"
-
-find "$outdir" -type f -print0 | xargs -0 chmod 0644
-
-echo "Appling reconfigure"
-ls "$outdir"/*.commit.sh 2>/dev/null | while read f; do
-    echo "[apply] $(basename "$f")"
-    bash "$f"
-done
-
-echo "Marking as latest"
-pushdq "$outdir/.."
-rm -f latest
-ln -s "$(basename "$outdir")" latest
-popdq
-
-echo "Update postmaps"
-"$helpers/post_maps" "$confdir"
-
-postfix_reload
-
-if is_dovecot ; then
-    echo "Updating dovecot config"
-    ischange=
-    pushdq "$srcdir"
-    opts="--preserve=timestamps -bv --suffix=.$(date_path)"
-    if ! md5cmp dovecot.conf /etc/dovecot/dovecot.conf ; then
-        cp $opts dovecot.conf /etc/dovecot
-        ischange=true
+log() {
+    local fdn
+    local priority="$1"
+    local msg
+    if [[ "$priority" = err ]]; then
+        fdn=2
+        pfx="${cRed}ERROR${cReset} "
+    else
+        fdn=1
     fi
-    ls 10-*.conf 2>/dev/null | while read f; do
-        if ! md5cmp "$f" "/etc/dovecot/conf.d/$f" ; then
-            cp $opts "$f" "/etc/dovecot/conf.d/$f"
+    while read msg ; do
+        write "$pfx$msg" >&$fdn
+        logger -p "$priority" "$msg"
+    done
+}
+
+run() {
+    {
+        _run 2>&1 1>&3 3>&- | log err
+    } 3>&1 1>&2 | log notice
+}
+
+_run() {
+    set -e
+    srcdir="$CONFIG_REPO"
+    thisdir="$(abs `dirname "$0"`)"
+    confdir=`postconf -h config_directory`
+    outdir="$confdir/history/$(date_path)"
+    helpers="$thisdir/helpers"
+
+    echo "Writing update to $outdir" >&2
+    mkdir -p "$outdir/tmp"
+    postconf -n > "$outdir/tmp/main.old"
+    postconf -n -c "$srcdir" > "$outdir/tmp/main.src"
+    "$helpers/config_diff" "$outdir/tmp/main.old" "$outdir/tmp/main.src" "$outdir"
+    "$helpers/files_diff" "$confdir" "$outdir"
+
+    find "$outdir" -type f -print0 | xargs -0 chmod 0644
+
+    echo "Appling reconfigure"
+    ls "$outdir"/*.commit.sh 2>/dev/null | while read f; do
+        echo "[apply] $(basename "$f")"
+        bash "$f"
+    done
+
+    echo "Marking as latest"
+    pushdq "$outdir/.."
+    rm -f latest
+    ln -s "$(basename "$outdir")" latest
+    popdq
+
+    echo "Update postmaps"
+    "$helpers/post_maps" "$confdir"
+
+    postfix_reload
+
+    if is_dovecot ; then
+        echo "Updating dovecot config"
+        ischange=
+        pushdq "$srcdir"
+        opts="--preserve=timestamps -bv --suffix=.$(date_path)"
+        if ! md5cmp dovecot.conf /etc/dovecot/dovecot.conf ; then
+            cp $opts dovecot.conf /etc/dovecot
             ischange=true
         fi
-    done
-    popdq
-    if [[ ! -z "$ischange" ]]; then
-        dovecot_reload
+        ls 10-*.conf 2>/dev/null | while read f; do
+            if ! md5cmp "$f" "/etc/dovecot/conf.d/$f" ; then
+                cp $opts "$f" "/etc/dovecot/conf.d/$f"
+                ischange=true
+            fi
+        done
+        popdq
+        if [[ ! -z "$ischange" ]]; then
+            dovecot_reload
+        fi
     fi
-fi
-            
+}
+
+run

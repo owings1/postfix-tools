@@ -8,18 +8,18 @@ chown root:syslog /var/log
 chmod 0775 /var/log
 touch /var/log/syslog
 
+pushdq /var/log
 for file in "${APP_LOGS[@]}" ; do
     if [[ -e "$file" ]]; then
         chown syslog:adm "$file"
     fi
 done
+popdq
 
 chown syslog:adm /var/spool/rsyslog
-
 chown postfix:postfix /var/lib/postfix
 
 pushdq /var/spool/postfix
-
 chown -R postfix:root \
     active \
     bounce \
@@ -30,17 +30,13 @@ chown -R postfix:root \
     incoming \
     private \
     saved
-
 chown -R postfix:postdrop \
     maildrop \
     public
-
 popdq
 
 pushdq /usr/sbin
-
 chown root:postdrop \
     postdrop \
     postqueue
-
 popdq

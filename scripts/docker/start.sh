@@ -6,9 +6,6 @@ source "$(dirname "$0")/../helpers/common.sh" || exit 1
 alias log="/usr/bin/logger -t coordinator"
 dir_="$(abs "$(dirname "$0")")"
 
-syslog="/var/log/syslog"
-pfxlog="/var/log/postfix.log"
-
 app_services=("postfix")
 if is_dovecot ; then
     app_services+=("dovecot")
@@ -20,9 +17,8 @@ all_services=("rsyslog" "${app_services[@]}")
 start_all() {
     local svc
     log 'Starting services'
-    postconf -e "maillog_file = $pfxlog"
     for svc in "${app_services[@]}" ; do
-        service "$svc" start
+        service_start "$svc"
     done
     log 'Started services'
 }
@@ -31,16 +27,16 @@ stop_all() {
     local svc
     log 'Stopping services'
     for svc in "${app_services[@]}" ; do
-        service "$svc" stop
+        service_stop "$svc"
     done
-    service rsyslog stop
+    service_stop rsyslog
 }
 
 reload_all() {
     local svc
     log 'Reloading services'
     for svc in "${app_services[@]}" ; do
-        service "$svc" reload
+        service_reload "$svc"
     done
 }
 
@@ -52,30 +48,45 @@ on_sighup() {
 on_sigint() {
     log "SIGINT"
     stop_all
-    kill -SIGTERM "$logpid"
+    kill -SIGTERM "$mainpid"
 }
 
 on_sigterm() {
     log "SIGTERM"
     stop_all
-    kill -SIGTERM "$logpid"
+    kill -SIGTERM "$mainpid"
 }
 
 "$dir_/fix_perms.sh"
 
-service rsyslog start || exit 1
+service_start rsyslog || exit 1
 
+logfiles=("${APP_LOGS[@]}")
 if is_firstrun ; then
-    "$dir_/first_run.sh" 2>&1 | logger -t first-run
-    touch /etc/first-run
+    logfiles=(first-run.log "${logfiles[@]}")
 fi
 
-/app/scripts/reconfigure 2>&1 | logger -t reconfigure
+pushdq /var/log
+tail -F -n 0 "${logfiles[@]}" 2>/dev/null &
+mainpid="$!"
+popdq
 
 exit=0
 
-tail -F -n 100 "${APP_LOGS[@]}" 2>/dev/null &
-logpid="$!"
+if is_firstrun ; then
+    if "$dir_/first_run.sh" ; then
+        touch /etc/first-run
+    else
+        echo "FATAL: first_run.sh failed" >&2
+        exit=1
+    fi
+    
+fi
+
+if ! LOGONLY=1 /app/scripts/reconfigure ; then
+    echo "FATAL: reconfigure failed"
+    exit=1
+fi
 
 trap on_sighup SIGHUP
 trap on_sigint SIGINT
@@ -84,14 +95,14 @@ trap on_sigterm SIGTERM
 verify_up() {
     local svc
     for svc in "${all_services[@]}" ; do
-        if ! service "$svc" status 2>&1 1>/dev/null ; then
+        if ! service_up "$svc" 2>&1 1>/dev/null ; then
             echo "FATAL: $svc failed to start" >&2
             exit=1
         fi
     done
     if [[ "$exit" != 0 ]]; then
         stop_all
-        kill -SIGTERM "$logpid"
+        kill -SIGTERM "$mainpid"
     else
         log "Services are running"
     fi
@@ -101,5 +112,5 @@ start_all
 sleep 5
 verify_up
 
-wait "$logpid"
+wait "$mainpid"
 exit "$exit"

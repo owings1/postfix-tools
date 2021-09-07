@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 #RUN apt-get update && apt-get install -y --no-install-recommends \
 #    libsasl2-modules sasl2-bin 
 
-RUN apt-get update && apt-get install -y curl telnet less nano
+RUN apt-get update && apt-get install -y psmisc curl telnet less nano
 
 EXPOSE 25 587
 ENV CONFIG_REPO /source

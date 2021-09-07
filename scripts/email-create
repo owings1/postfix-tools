@@ -63,10 +63,7 @@ else
     echo "$line" >> "$pwdfile"
     mkdir -pv "$homedir"
     chown "$uid:$gid" "$homedir"
-    mapfile="$pwdfile.map"
-    echo "Updating $(basename "$mapfile")" >&2
-    sed 's/:.*/ ./' "$pwdfile" > "$mapfile"
-    postmap "$mapfile"
+    passwd_map "$pwdfile"
 fi
 
 echo "Password for new user:" >&2
