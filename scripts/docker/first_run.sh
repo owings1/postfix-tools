@@ -36,8 +36,9 @@ _run() {
         cp -nv "$files_/"10-*.conf dovecot
     fi
     # the main.cf and master.cf may be updated by install scripts
-    cp -nv /etc/postfix/main.cf /etc/postfix/master.cf "$files_/destinations" .
+    cp -nv /etc/postfix/main.cf /etc/postfix/master.cf .
     pushdq files
+    cp -nv "$files_/destinations" .
     for file in client_checks sender_checks virtual virtual_alias_domains ; do
         if [[ ! -e "$file" ]]; then
             touch "$file"
