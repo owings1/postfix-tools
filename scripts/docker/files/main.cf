@@ -15,13 +15,15 @@ smtpd_banner = $myhostname ESMTP $mail_name
 smtpd_recipient_restrictions = check_client_access hash:${config_directory}/client_checks check_sender_access hash:${config_directory}/sender_checks
 smtpd_relay_restrictions = permit_mynetworks reject_unauth_destination
 smtpd_reject_unlisted_recipient = no
-smtpd_tls_CAfile = ${config_directory}/ssl/certs/active/ca.crt
+
 smtpd_tls_auth_only = yes
 # Obsolete, see http://www.postfix.org/postconf.5.html#smtpd_tls_chain_files
-smtpd_tls_cert_file = ${config_directory}/ssl/certs/active/server.crt
+#smtpd_tls_key_file = ${config_directory}/ssl/server.key
+#smtpd_tls_cert_file = ${config_directory}/ssl/certs/active/server.crt
+#smtpd_tls_CAfile = ${config_directory}/ssl/certs/active/ca.crt
+smtpd_tls_chain_files = ${config_directory}/ssl/server.key ${config_directory}/ssl/certs/active/server.crt ${config_directory}/ssl/certs/active/ca.crt
 smtpd_tls_dh1024_param_file = ${config_directory}/ssl/dh/active/dh1024.pem
 smtpd_tls_dh512_param_file = ${config_directory}/ssl/dh/active/dh512.pem
-smtpd_tls_key_file = ${config_directory}/ssl/server.key
 smtpd_tls_loglevel = 2
 smtpd_tls_security_level = may
 smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
