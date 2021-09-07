@@ -42,50 +42,67 @@ _run() {
 
     echo "Writing update to $outdir"
     mkdir -p "$outdir/tmp"
-    postconf -n > "$outdir/tmp/main.old"
-    postconf -n -c "$srcdir" > "$outdir/tmp/main.src"
-    "$helpers/config_diff" "$outdir/tmp/main.old" "$outdir/tmp/main.src" "$outdir"
-    "$helpers/files_diff" "$confdir" "$outdir"
-
-    find "$outdir" -type f -print0 | xargs -0 chmod 0644
-
-    echo "Applying reconfigure"
-    ls "$outdir"/*.commit.sh 2>/dev/null | while read f; do
-        echo "[apply] $(basename "$f")"
-        bash "$f"
-    done
-
-    echo "Marking as latest"
-    pushdq "$outdir/.."
-    rm -f latest
-    ln -s "$(basename "$outdir")" latest
-    popdq
-
-    echo "Updating postmaps"
-    "$helpers/post_maps" "$confdir"
-
-    postfix_reload
-
-    local ischange=
-    if is_dovecot ; then
-        echo "Updating dovecot config"
+    postconf -n | grep -v '^config_directory =' > "$outdir/tmp/main.cf.old"
+    postconf -n -c "$srcdir" | grep -v '^config_directory =' > "$outdir/tmp/main.cf.new"
+    "$helpers/postfixmain_diff" "$outdir/tmp/main.cf.old" "$outdir/tmp/main.cf.new" "$outdir/tmp"
+    "$helpers/filesdir_diff" "postfix_files" "$srcdir/files" "$confdir" "$outdir/tmp"
+    if is_dovecot; then
         pushdq "$srcdir"
         opts="--preserve=timestamps -bv --suffix=.$(date_path)"
         if ! md5cmp dovecot.conf /etc/dovecot/dovecot.conf ; then
-            cp $opts dovecot.conf /etc/dovecot
-            ischange=true
+            cp dovecot.conf "$outdir/tmp/dovecot.conf.new"
+            cp /etc/dovecot/dovecot.conf "$outdir/tmp/dovecot.conf.old"
+            local dcfa="$outdir/tmp/dovecot_dot_conf.apply.sh"
+            local dcfr="$outdir/tmp/dovecot_dot_conf.revert.sh"
+            echo "cd $(printf '%q' "$outdir/tmp") && install -v -p -m 0644 \\" | teeq -a "$dcfa" "$dcfr"
+            echo "    dovecot.conf.new /etc/dovecot/dovecot.conf" >> "$dcfa"
+            echo "    dovecot.conf.old /etc/dovecot/dovecot.conf" >> "$dcfr"
         fi
-        ls 10-*.conf 2>/dev/null | while read f; do
-            if ! md5cmp "$f" "/etc/dovecot/conf.d/$f" ; then
-                cp $opts "$f" "/etc/dovecot/conf.d/$f"
-                ischange=true
-            fi
-        done
-        popdq
-        if [[ ! -z "$ischange" ]]; then
-            dovecot_reload
-        fi
+        "$helpers/filesdir_diff" "dovecot_confd_files" "$srcdir/dovecot" /etc/dovecot/conf.d "$outdir/tmp"
     fi
+
+    find "$outdir" -type f -print0 | xargs -0 chmod 0644
+    local applyfiles
+    readarray -t applyfiles < <(ls "$outdir/tmp/"*.apply.sh 2>/dev/null)
+    if [[ "${#applyfiles[@]}" = 0 ]]; then
+        echo "No configuration changes"
+        rm -r "$outdir"
+    else
+        echo "Building change script"
+        local applyfile="$outdir/apply.sh"
+        local revertfile="$outdir/revert.sh"
+        local header="# $(date)"
+        echo "$header" | teeq -a "$applyfile" "$revertfile"
+        local fa
+        local fr
+        for fa in "${applyfiles[@]}" ; do
+            local fr="$(sed 's/\.apply\.sh$/\.revert\.sh/' <<< "$fa")"
+            local ftitle="$(basename $fa | sed 's/\..*//')"
+            echo " > $ftitle"
+            echo "# $ftitle" >> "$applyfile"| teeq -a "$applyfile" "$revertfile"
+            cat "$fa" >> "$applyfile"
+            if [[ -e "$fr" ]]; then
+                cat "$fr" >> "$revertfile"
+            else
+                echo "# no revert action" >> "$revertfile"
+            fi
+            echo "" | teeq -a "$applyfile" "$revertfile"
+            rm -f "$fa" "$fr"
+        done
+        echo "Running change script"
+        bash "$applyfile"
+        echo "Marking as latest"
+        pushd "$outdir/.."
+        rm -f latest
+        ln -s "$(basename "$outdir")" latest
+        popdq
+    fi
+
+    echo "Updating postmaps"
+    "$helpers/postmaps_update" "$confdir"
+
+    postfix_reload
+    dovecot_reload
 }
 
 run

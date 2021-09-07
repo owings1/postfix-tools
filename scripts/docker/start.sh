@@ -83,7 +83,7 @@ if is_firstrun ; then
 fi
 
 if ! LOGONLY=1 /app/scripts/reconfigure ; then
-    echo "FATAL: reconfigure failed"
+    echo "FATAL: reconfigure failed" >&2
     exit=1
 fi
 

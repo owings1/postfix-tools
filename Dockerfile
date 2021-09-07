@@ -15,16 +15,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     dovecot-core dovecot-imapd dovecot-lmtpd
 
-RUN apt-get update && apt-get install -y psmisc curl telnet less nano
+RUN apt-get update && apt-get install -y psmisc curl telnet less nano ccze
 
 EXPOSE 25 143 587
 ENV CONFIG_REPO /source
-WORKDIR /app
-COPY scripts scripts
+WORKDIR /source
+COPY scripts /app/scripts
 VOLUME /source
 VOLUME /home/email
 VOLUME /etc/auth
-RUN scripts/docker/install.sh
+RUN /app/scripts/docker/install.sh
 CMD ["/bin/bash", "/app/scripts/docker/start.sh"]
 
 #RUN apt-get update && apt-get install -y --no-install-recommends \

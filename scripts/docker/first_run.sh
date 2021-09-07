@@ -31,7 +31,9 @@ _run() {
     pushdq "$CONFIG_REPO"
     cp -nv "$files_/meta.json" .
     if is_dovecot ; then
-        cp -nv "$files_/"10-*.conf "$files_/dovecot.conf" .
+        cp -nv "$files_/dovecot.conf" .
+        mkdir -pv dovecot
+        cp -nv "$files_/"10-*.conf dovecot
     fi
     # the main.cf and master.cf may be updated by install scripts
     cp -nv /etc/postfix/main.cf /etc/postfix/master.cf "$files_/destinations" .

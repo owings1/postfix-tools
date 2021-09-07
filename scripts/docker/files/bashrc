@@ -7,7 +7,7 @@ export PATH="$PATH:/app/scripts"
 # If not running interactively, don't do anything
 [ -z "$PS1" ] && return
 
-force_color_prompt=yes
+export TERM=xterm-color
 
 # don't put duplicate lines in the history. See bash(1) for more options
 # ... or force ignoredups and ignorespace

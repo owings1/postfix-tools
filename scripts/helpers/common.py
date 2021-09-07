@@ -11,6 +11,7 @@ import sys
 exists = os.path.exists
 pabs = os.path.abspath
 pjoin = os.path.join
+pbname = os.path.basename
 
 def rdjson(file):
     with open(file) as reader:

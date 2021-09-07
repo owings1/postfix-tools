@@ -111,7 +111,7 @@ passwd_map() {
     local mapfile="$pwdfile.map"
     sed 's/:.*/ ./' "$pwdfile" > "$mapfile" &&
     postmap "$mapfile" &&
-    echo "Updated passwd map" >&2
+    echo "Updated passwd map"
 }
 
 md5cmp() {
@@ -140,6 +140,10 @@ pushdq() {
 
 popdq() {
     popd > /dev/null
+}
+
+teeq() {
+    tee $@ > /dev/null
 }
 
 if is_saslauthd; then

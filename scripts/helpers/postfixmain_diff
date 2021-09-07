@@ -31,6 +31,7 @@ def udpatch(data, keys = None):
         'postconf -e \\',
         *[qline(eqstr(entry)) for entry in entries[0:-1]],
         qline(eqstr(entries[-1]), True),
+        ''
     ))
 
 def diffline(key, a, b):
@@ -46,9 +47,9 @@ def diffline(key, a, b):
 def main():
     outdir = sys.argv[3]
     a, b = (parse_maincf(file) for file in sys.argv[1:3])
-    commitfile = pjoin(outdir, 'config.commit.sh')
-    revertfile = pjoin(outdir, 'config.revert.sh')
-    difffile = pjoin(outdir, 'config.diff.txt')
+    commitfile = pjoin(outdir, 'postfix_main.apply.sh')
+    revertfile = pjoin(outdir, 'postfix_main.revert.sh')
+    difffile = pjoin(outdir, 'postfix_main.diff.txt')
     added = {key: b[key] for key in b if key not in a}
     changed = {key: b[key] for key in b if key in a and a[key] != b[key]}
     forced = {key: b[key] for key in b if meta.forceconfig and key in a and a[key] == b[key]}

@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+source "$(dirname "$0")/helpers/common.sh"
+
+cd /var/log
+tail -F $@ "${APP_LOGS[@]}" 2>/dev/null | ccze -A -o nolookups
