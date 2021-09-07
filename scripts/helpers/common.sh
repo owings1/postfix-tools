@@ -13,7 +13,6 @@ if [[ -t 0 ]]; then
     cReset='\033[0m'
     cRed='\033[0;31m'
     cGreen='\033[0;32m'
-    cOrange='\033[0;33m'
     cBlue='\033[0;34m'
     cMagenta='\033[0;35m'
     cCyan='\033[0;36m'
@@ -21,7 +20,8 @@ if [[ -t 0 ]]; then
     cGrey='\033[1;30m'
     cRedLight='\033[1;31m'
     cGreenLight='\033[1;32m'
-    cYellow='\033[1;33m'
+    cYellow='\033[0;33m'
+    cYellowLight='\033[1;33m'
     cBlueLight='\033[1;34m'
     cMagentaLight='\033[1;35m'
     cCyanLight='\033[1;36m'
@@ -34,11 +34,9 @@ if [[ -z "$CONFIG_REPO" ]]; then
 fi
 
 if [[ ! -e "$CONFIG_REPO" ]]; then
-    echo -e "${cRed}ERROR${cReset} $CONFIG_REPO does not exist" >&2
-    exit 1
+    echo -e "${cYellowLight}WARNING${cReset} $CONFIG_REPO does not exist" >&2
+    return 1
 fi
-
-SASL_SPOOL="/var/spool/postfix/var/run/saslauthd"
 
 abs() {
     echo `cd "$1" && pwd`
@@ -95,6 +93,8 @@ service_start() {
 service_stop() {
     if is_systemd ; then
         systemctl stop "$1"
+    elif is_docker && [[ "$1" == rsyslog ]]; then
+        killall rsyslogd
     else
         service "$1" stop
     fi
@@ -170,6 +170,10 @@ pushdq() {
 popdq() {
     popd > /dev/null
 }
+
+if is_saslauthd; then
+    SASL_SPOOL="/var/spool/postfix/var/run/saslauthd"
+fi
 
 APP_LOGS=(
     coordinator.log

@@ -15,12 +15,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     dovecot-core dovecot-imapd dovecot-lmtpd
 
-#RUN apt-get update && apt-get install -y --no-install-recommends \
-#    libsasl2-modules sasl2-bin 
-
 RUN apt-get update && apt-get install -y psmisc curl telnet less nano
 
-EXPOSE 25 587
+EXPOSE 25 143 587
 ENV CONFIG_REPO /source
 WORKDIR /app
 COPY scripts scripts
@@ -29,3 +26,6 @@ VOLUME /home/email
 VOLUME /etc/auth
 RUN scripts/docker/install.sh
 CMD ["/bin/bash", "/app/scripts/docker/start.sh"]
+
+#RUN apt-get update && apt-get install -y --no-install-recommends \
+#    libsasl2-modules sasl2-bin 

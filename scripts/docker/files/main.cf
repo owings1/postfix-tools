@@ -4,7 +4,6 @@ biff = no
 compatibility_level = 2
 inet_interfaces = all
 inet_protocols = ipv4
-mailbox_size_limit = 0
 mydestination = ${config_directory}/destinations
 myhostname = localhost
 mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
@@ -30,3 +29,5 @@ smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
 virtual_alias_domains = ${config_directory}/virtual_alias_domains
 virtual_alias_maps = hash:${config_directory}/virtual
 local_recipient_maps = hash:/etc/auth/passwd.map
+
+smtpd_client_port_logging = yes
