@@ -104,9 +104,6 @@ color brightgreen "^mynetworks[[:space:]]*=[[:space:]]*((((25[0-5]|(2[0-4]|1{0,1
 color brightgreen "^(inet|postscreen_allowlist|proxy)_interfaces[[:space:]]*=[[:space:]]*((((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|\[([a-f0-9:]+:+)+[a-f0-9]*(((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))?\])([[:space:],]+|$))+"
 
 
-# reset
-color cyan "[{}]"
-
 # Character filters (no var expansion)
 # "^(ATTRS)[[:space:]]*=[[:space:]]*(VALUES)[[:space:]]*$"
 color normal "^(command_expansion_filter|execution_directory_expansion_filter|forward_expansion_filter|postscreen_expansion_filter|smtpd_expansion_filter|verp_delimiter_filter)[[:space:]]*=[[:space:]]*[^[:space:]]+[[:space:]]*$"
@@ -137,6 +134,7 @@ color black,red "^(process_id|process_id_directory|process_name|service_name|tls
 
 # reset
 color normal "([=,]|<>)"
+color red "[}{]"
 # escapes
 color brightwhite "\\[trn\\]"
 # Comments
