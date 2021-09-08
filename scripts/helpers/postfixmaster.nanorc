@@ -1,0 +1,46 @@
+syntax postfixmain "(^|/)?master.cf$"
+
+comment "#"
+
+# flags
+color brightwhite "[[:space:]][[:alpha:]]+="
+# numbers
+color red "[[:space:]][0-9]+([[:space:]]|$)?"
+# Files
+color yellow "([[:space:]}:=,]|\$[a-z_]+)/[^*?[:space:]]+"
+
+# options
+
+color yellow "[[:space:]]+-o[[:space:]]+[a-zA-Z0-9_]+=.*"
+color cyan "[[:space:]]+-o[[:space:]]+[a-zA-Z0-9_]+="
+color brightcyan "[[:space:]]+-o[[:space:]]"
+
+# variables
+color brightcyan "\$\{[a-zA-Z0-9_{?$;[:space:]]+\}"
+color brightcyan "\$[a-zA-Z0-9_]+"
+color normal "[^$]\{.*?\}"
+color normal "[;]"
+color brightcyan "\$[a-zA-Z0-9_]+"
+color brightcyan "\$"
+
+color magenta "^(smtp|submission|pickup|cleanup|qmgr|tlsmgr|rewrite|bounce|defer|trace|verify|flush|proxymap|proxywrite|smtp|relay|showq|error|retry|discard|local|virtual|lmtp|anvil|scache|postlog|maildrop|uucp|ifmail|bsmtp|scalemail-backend|mailman)[[:space:]]"
+
+color brightmagenta "^(smtp|submission)[[:space:]]+inet"
+color brightyellow "[[:space:]]inet[[:space:]]"
+color brightcyan "[[:space:]]smtpd([[:space:]]|$)"
+color yellow "[[:space:]](unix|unix-dgram)([[:space:]]|$)"
+color brightblue "[[:space:]](pickup|cleanup|qmgr|tlsmgr|trivial-rewrite|bounce|bounce|bounce|verify|flush|proxymap|proxymap|smtp|showq|error|error|discard|local|virtual|lmtp|anvil|scache|postlogd|pipe)([[:space:]]|$)"
+
+# y/n
+color green "[[:space:]]y[[:space:]]"
+color cyan "[[:space:]]n[[:space:]]"
+
+
+# Comments
+color brightblack "(^|[[:space:]])#.*"
+
+# Trailing whitespace.
+color ,green "[[:space:]]+$"
+
+# reset
+color normal "([=,]|<>)"
