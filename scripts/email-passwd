@@ -21,31 +21,31 @@ if ! grep -q "^$username:" "$pwdfile" ; then
 fi
 
 if [[ "$2" = "--stdin" ]]; then
-    read password <&0
-    set +e
-    msg="$(check_okpassword "$password")"
-    ret="$?"
-    set -e
-    if [[ "$ret" != 0 ]]; then
-        echo "Bad password: $msg" >&2
-        exit 1
-    fi
+    read -r password <&0
+else
+    for i in seq 3; do
+        echo -n "Enter new password: " >&2
+        read -rs password
+        echo -ne "\nRetype new password: ">&2
+        read -rs passcheck
+        echo >&2
+        if [[ "$password" != "$passcheck" ]]; then
+            echo "Error: Passwords don't match!" >&2
+        else
+            break
+        fi
+    done
+    [[ "$password" = "$passcheck" ]] || exit 1
 fi
 
+check_okpassword "$password"
+
 if [[ "$pwdfile" = '/etc/passwd' ]]; then
-    if [[ -z "$password" ]]; then
-        passwd "$username"
-    else
-        chpasswd <<< "$username:$password"
-    fi
+    chpasswd <<< "$username:$password"
 else
-    if [[ -z "$password" ]]; then
-        pwdhash="$(doveadm pw -s "$alg")"
-        [[ "$?" = 0 ]] || exit 1
-    else
-        input="$(echo -ne "$password\n$password\n")"
-        pwdhash="$(doveadm pw -s "$alg" <<< "$input")"
-    fi
+    printf -v input '%s\n%s\n' "$password" "$password"
+    pwdhash="$(doveadm pw -s "$alg" -u "$username" <<< "$input")"
     cp "$pwdfile" "$pwdfile~"
     sed -E -i "s'^$username:[^:]*:(.*)'$username:$pwdhash:\1'" "$pwdfile"
 fi
+echo "Password updated"

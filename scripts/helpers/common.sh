@@ -110,12 +110,17 @@ postfix_reload() {
 check_okpassword() {
     local pwd="$1"
     local raw="$(cracklib-check <<< "$pwd")"
-    if [[ "$(awk '{print $NF}' <<< "$raw")" = 'OK' ]]; then
-        return 0
+    if [[ "$(awk '{print $NF}' <<< "$raw")" != 'OK' ]]; then
+        local idx="$(expr "${#pwd}" + 3)"
+        echo "Bad password: $(cut "-c$idx-" <<< "$raw")" >&2
+        return 1
     fi
-    local idx="$(expr "${#pwd}" + 3)"
-    echo "$(cut "-c$idx-" <<< "$raw")"
-    return 1
+    local regex='^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*)(}{])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8,}$'
+    local rxdesc='Password must be at least 12 chars, two uppercase, three lower, two digits, one special'
+    if ! grep -qP "$regex" <<< "$pwd" ; then
+        echo "Bad password: " >&2
+        return 1
+    fi
 }
 
 passwd_map() {

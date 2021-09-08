@@ -10,6 +10,7 @@ fi
 
 source "$(dirname "$0")/helpers/common.sh"
 
+ucolor="$cCyan$username$cReset"
 thisdir="$(abs `dirname "$0"`)"
 
 alias metaval="$thisdir/helpers/metaval"
@@ -24,6 +25,19 @@ pwlen="32"
 
 homedir="$hdir/$username"
 
+fail() {
+    echo "${cRed}Error$cReset $@" >&2
+    exit 1
+}
+info() {
+    echo "$cGreen$uCaret$cReset $@"
+}
+
+regex='^[^.-_][a-zA-Z0-9-_.]{3,64}$'
+if ! grep -qP "$regex" <<< "$username" ; then
+    fail "Username must meet regex $cWhiteLight$regex$cReset"
+fi
+
 if [[ ! -e "$pwdfile" ]]; then
     touch "$pwdfile" || exit 1
 fi
@@ -31,13 +45,18 @@ fi
 gid="$(grep "^$gname:" /etc/group | awk -F: '{print $3}')"
 if [[ -z "$gid" ]]; then
     gid="515"
-    echo "Creating group $gname with gid $gid" >&2
+    info "Creating group $cMagenta$gname$cReset with gid $gid"
     groupadd -g "$gid" "$gname"
 fi
 
 if grep -q "^$username:" "$pwdfile" ; then
-    echo "User $username already exists" >&2
-    exit 1
+    fail "User $ucolor already exists"
+fi
+if grep -q "^$username:" /etc/passwd ; then
+    fail "User $ucolor is a system user"
+fi
+if grep -q "^$username:" /etc/aliases ; then
+    fail "User $ucolor is a system alias"
 fi
 
 lastid="$(awk -F: '{print $3":"$4}' "$pwdfile" | grep ":$gid\$" | awk -F: '{print $1}' | sort | tail -n 1)"
@@ -48,23 +67,24 @@ else
 fi
 
 password="$(pwgen "$pwopts" "$pwlen" 1)"
-mkdir -pv "$hdir" >&2
+mkdir -pv "$hdir"
 
 if [[ "$pwdfile" = '/etc/passwd' ]]; then
-    echo "Creating system user $username with uid $uid" >&2
+    info "Creating system user $ucolor with uid $uid"
     useradd -m -d "$homedir" -g "$gid" -u "$uid" -s "$shell" "$username"
     chpasswd <<< "$username:$password"
 else
-    echo "Creating passwd-file user $username with uid $uid" >&2
-    input="$(echo -ne "$password\n$password\n")"
-    pwdhash="$(doveadm pw -s "$alg" <<< "$input")"
+    info "Creating passwd-file user $ucolor with uid $uid"
+    printf -v input '%s\n%s\n' "$password" "$password"
+    pwdhash="$(doveadm pw -s "$alg" -u "$username" <<< "$input")"
     line="$username:$pwdhash:$uid:$gid::$homedir:$shell"
     cp "$pwdfile" "$pwdfile~"
     echo "$line" >> "$pwdfile"
-    mkdir -pv "$homedir"
-    chown "$uid:$gid" "$homedir"
-    passwd_map "$pwdfile" >&2
+    info "Creating home dir $cYellow$homedir$cReset"
+    mkdir -p "$homedir"
+    chown -R "$uid:$gid" "$homedir"
+    passwd_map "$pwdfile" > /dev/null
+    info "Updated passwd map"
 fi
 
-echo "Password for new user:" >&2
-echo "$password"
+info "Created $ucolor"
