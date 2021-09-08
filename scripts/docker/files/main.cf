@@ -12,7 +12,8 @@ recipient_delimiter = +
 smtp_tls_security_level = encrypt
 smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 smtpd_banner = $myhostname ESMTP $mail_name
-smtpd_recipient_restrictions = check_client_access hash:${config_directory}/client_checks check_sender_access hash:${config_directory}/sender_checks
+smtpd_client_restrictions = check_client_access hash:${config_directory}/client_checks
+smtpd_recipient_restrictions = check_sender_access hash:${config_directory}/sender_checks
 smtpd_relay_restrictions = permit_mynetworks reject_unauth_destination
 smtpd_reject_unlisted_recipient = no
 

@@ -19,7 +19,6 @@ if [[ -z "$(postconf -h smtpd_sasl_local_domain)" ]]; then
 fi
 postconf -e \
     'smtpd_sasl_auth_enable = yes' \
-    'broken_sasl_auth_clients = yes' \
     'smtpd_sasl_security_options = noanonymous'
 confkey='smtpd_relay_restrictions'
 confval='permit_sasl_authenticated'
@@ -32,6 +31,5 @@ fi
 # --------
 #      smtpd_sasl_local_domain = $myhostname
 #      smtpd_sasl_auth_enable = yes
-#      broken_sasl_auth_clients = yes
 #      smtpd_sasl_security_options = noanonymous
 #      smtpd_relay_restrictions = permit_sasl_authenticated ...

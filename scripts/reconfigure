@@ -4,16 +4,14 @@ shopt -s expand_aliases
 alias logger="/usr/bin/logger -t reconfigure"
 
 if [[ -t 0 ]] && [[ -z "$LOGONLY" ]]; then
-    alias write="echo -e"
+    alias write="echo"
 else
     alias write="true"
 fi
 
 log() {
-    local fdn
+    local fdn msg pfx
     local priority="$1"
-    local msg
-    local pfx
     if [[ "$priority" = err ]]; then
         fdn=2
         pfx="${cRed}ERROR${cReset} "
@@ -38,32 +36,60 @@ _run() {
     local thisdir="$(abs `dirname "$0"`)"
     local confdir=`postconf -h config_directory`
     local outdir="$confdir/history/$(date_path)"
+    local builddir="$outdir/build"
     local helpers="$thisdir/helpers"
+    local builddirq="$(printf '%q' "$builddir")"
 
     echo "Writing update to $outdir"
-    mkdir -p "$outdir/tmp"
-    postconf -n | grep -v '^config_directory =' > "$outdir/tmp/main.cf.old"
-    postconf -n -c "$srcdir" | grep -v '^config_directory =' > "$outdir/tmp/main.cf.new"
-    "$helpers/postfixmain_diff" "$outdir/tmp/main.cf.old" "$outdir/tmp/main.cf.new" "$outdir/tmp"
-    "$helpers/filesdir_diff" "postfix_files" "$srcdir/files" "$confdir" "$outdir/tmp"
+    mkdir -p "$builddir"
+    pushdq "$builddir"
+    # postfix main.cf
+    postconf -n | grep -v '^config_directory =' > main.cf.old
+    postconf -n -c "$srcdir" | grep -v '^config_directory =' > main.cf.new
+    if ! md5cmp master.cf.old master.cf.new ; then
+        "$helpers/postfixmain_diff" main.cf.old main.cf.new .
+    fi
+
+    # postfix master.cf
+    postconf -M | cat "$helpers/mastercfhead.txt" - > master.cf.old
+    postconf -M -c "$srcdir" | cat "$helpers/mastercfhead.txt" - > master.cf.new
+    if ! md5cmp master.cf.old master.cf.new ; then
+        opts="--preserve=timestamps -v"
+        local mcfa='postfix_master.apply.sh'
+        local mcfr='postfix_master.revert.sh'
+        diff master.cf.old master.cf.new | sed 's/^/# /' > "$mcfa"
+        diff master.cf.new master.cf.old | sed 's/^/# /' > "$mcfr"
+        echo "cd $builddirq && install -v -p -m 0644 \\" | teeq -a "$mcfa" "$mcfr"
+        echo "    master.cf.new /etc/postfix/master.cf" >> "$mcfa"
+        echo "    master.cf.old /etc/postfix/master.cf" >> "$mcfr"
+    fi
+
+    # postfix files
+    "$helpers/filesdir_diff" "postfix_files" "$srcdir/files" "$confdir" .
+
     if is_dovecot; then
-        pushdq "$srcdir"
+        # dovecot.conf
         opts="--preserve=timestamps -bv --suffix=.$(date_path)"
-        if ! md5cmp dovecot.conf /etc/dovecot/dovecot.conf ; then
-            cp dovecot.conf "$outdir/tmp/dovecot.conf.new"
-            cp /etc/dovecot/dovecot.conf "$outdir/tmp/dovecot.conf.old"
-            local dcfa="$outdir/tmp/dovecot_dot_conf.apply.sh"
-            local dcfr="$outdir/tmp/dovecot_dot_conf.revert.sh"
-            echo "cd $(printf '%q' "$outdir/tmp") && install -v -p -m 0644 \\" | teeq -a "$dcfa" "$dcfr"
+        if ! md5cmp "$srcdir/dovecot.conf" /etc/dovecot/dovecot.conf ; then
+            cp "$srcdir/dovecot.conf" dovecot.conf.new
+            cp /etc/dovecot/dovecot.conf dovecot.conf.old
+            local dcfa="dovecot_dot_conf.apply.sh"
+            local dcfr="dovecot_dot_conf.revert.sh"
+            diff dovecot.conf.old dovecot.conf.new | sed 's/^/# /' > "$dcfa"
+            diff dovecot.conf.new dovecot.conf.old | sed 's/^/# /' > "$dcfr"
+            echo "cd $builddirq && install -v -p -m 0644 \\" | teeq -a "$dcfa" "$dcfr"
             echo "    dovecot.conf.new /etc/dovecot/dovecot.conf" >> "$dcfa"
             echo "    dovecot.conf.old /etc/dovecot/dovecot.conf" >> "$dcfr"
         fi
-        "$helpers/filesdir_diff" "dovecot_confd_files" "$srcdir/dovecot" /etc/dovecot/conf.d "$outdir/tmp"
+        # dovecot/conf.d files
+        "$helpers/filesdir_diff" "dovecot_confd_files" "$srcdir/dovecot" /etc/dovecot/conf.d .
     fi
+
+    popdq
 
     find "$outdir" -type f -print0 | xargs -0 chmod 0644
     local applyfiles
-    readarray -t applyfiles < <(ls "$outdir/tmp/"*.apply.sh 2>/dev/null)
+    readarray -t applyfiles < <(ls "$builddir/"*.apply.sh 2>/dev/null)
     if [[ "${#applyfiles[@]}" = 0 ]]; then
         echo "No configuration changes"
         rm -r "$outdir"
@@ -71,8 +97,8 @@ _run() {
         echo "Building change script"
         local applyfile="$outdir/apply.sh"
         local revertfile="$outdir/revert.sh"
-        local header="# $(date)"
-        echo "$header" | teeq -a "$applyfile" "$revertfile"
+        local header="$(printf "#!/bin/bash\n# $(date)\n# --------------")"
+        echo -e "$header\n" | teeq -a "$applyfile" "$revertfile"
         local fa
         local fr
         for fa in "${applyfiles[@]}" ; do
@@ -92,7 +118,7 @@ _run() {
         echo "Running change script"
         bash "$applyfile"
         echo "Marking as latest"
-        pushd "$outdir/.."
+        pushdq "$outdir/.."
         rm -f latest
         ln -s "$(basename "$outdir")" latest
         popdq

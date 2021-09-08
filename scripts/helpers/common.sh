@@ -9,6 +9,17 @@ alias postfix=/usr/sbin/postfix
 alias postmap=/usr/sbin/postmap
 alias postconf=/usr/sbin/postconf
 alias service=/usr/sbin/service
+if [[ -t 0 ]]; then
+    alias is_term=true
+else
+    alias is_term=false
+fi
+
+if [[ "$FORCE_COLOR" < 1 ]]; then
+    alias is_color=is_term
+else
+    alias is_color=true
+fi
 
 abs() {
     echo `cd "$1" && pwd`
@@ -147,6 +158,77 @@ teeq() {
     tee $@ > /dev/null
 }
 
+if is_color; then
+    cReset="$(printf '\x1b[0m')"
+    cRed="$(printf '\x1b[0;31m')"
+    cGreen="$(printf '\x1b[0;32m')"
+    cBlue="$(printf '\x1b[0;34m')"
+    cMagenta="$(printf '\x1b[0;35m')"
+    cCyan="$(printf '\x1b[0;36m')"
+    cCyanLight="$(printf '\x1b[1;36m')"
+    cGreyLight="$(printf '\x1b[0;37m')"
+    cGrey="$(printf '\x1b[1;30m')"
+    cRedLight="$(printf '\x1b[1;31m')"
+    cGreenLight="$(printf '\x1b[1;32m')"
+    cYellow="$(printf '\x1b[0;33m')"
+    cYellowLight="$(printf '\x1b[1;33m')"
+    cBlueLight="$(printf '\x1b[1;34m')"
+    cMagentaLight="$(printf '\x1b[1;35m')"
+    cWhite="$(printf '\x1b[1;37m')"
+    cWhiteLight="$(printf '\x1b[37;1m')"
+    cDim="$(printf '\x1b[2m')"
+    cUndim="$(printf '\x1b[22m')"
+fi
+uCheck="√" # \xe2\x88\x9a
+uCaret="❯"
+uCaretr="❮"
+
+color_curl_smtp() {
+    local line scope lcolor
+    local cmds='STARTTLS|EHLO|AUTH DIGEST-MD5|AUTH LOGIN|MAIL FROM|RCPT TO|DATA|\*|QUIT'
+    while read line; do
+        case "${line:0:1}" in
+            '<') scope=recv ; lcolor="$cCyan" ;;
+            '>') scope=send ; lcolor="$cMagenta" ;;
+            '{' | '}') scope=bytes ; lcolor="$cDim" ;;
+            '*') scope=info ; lcolor="$cYellowLight$cDim" ;;
+            *) scope= ; lcolor="$cReset" ;;
+        esac
+        if [[ "$scope" = send ]]; then
+            line="$uCaret $(sed -E \
+                -e "s/($cmds)/${cMagentaLight}\1${lcolor}/g" \
+                <<< "${line:2}")"
+        elif [[ "$scope" = recv ]]; then
+            # https://www.iana.org/assignments/smtp-enhanced-status-codes/smtp-enhanced-status-codes.xhtml#smtp-enhanced-status-codes-3
+            # https://en.wikipedia.org/wiki/List_of_SMTP_server_return_codes
+            line="$uCaretr $(sed -E \
+                -e "s/(2[0-9]{2} [0-9.]+)/${cGreenLight}\1${lcolor}/" \
+                -e "s/(4[0-9]{2} [0-9.]+)/${cYellowLight}\1${lcolor}/" \
+                -e "s/(5[0-9]{2} [0-9.]+)/${cRedLight}\1${lcolor}/" \
+                -e "s/Ok: (queued) as/Ok: ${cGreen}\1${lcolor} as/" \
+                -e "s/(Ok|3[0-9]{2} )/${cCyanLight}\1${lcolor}/" \
+                <<< "${line:2}")"
+        elif [[ "$scope" = info ]]; then
+            line="  $(sed -E \
+                -e "s/(SSL certificate verify ok)/${cGreen}\1${lcolor}/" \
+                    <<< "${line:2}")"
+        elif [[ "$scope" = bytes ]]; then
+            line="  ${line:0}"
+        fi
+        line="$lcolor$line$cReset"
+        echo "$line"
+    done
+}
+
+color_curl_smtp_status() {
+    local status="$1"
+    if [[ "$status" = 0 ]]; then
+        echo "${cGreenLight}${uCheck} ${cWhiteLight}Email sent${cReset}"
+    else
+        echo "${cRedLight}FAIL${cReset} curl exited with status ${cRedLight}${status}${cReset}"
+    fi
+}
+
 if is_saslauthd; then
     SASL_SPOOL="/var/spool/postfix/var/run/saslauthd"
 fi
@@ -169,32 +251,11 @@ APP_LOGS+=(
     postfix.err
     reconfigure.log
 )
-    
-if [[ -t 0 ]]; then
-    cReset='\033[0m'
-    cRed='\033[0;31m'
-    cGreen='\033[0;32m'
-    cBlue='\033[0;34m'
-    cMagenta='\033[0;35m'
-    cCyan='\033[0;36m'
-    cGreyLight='\033[0;37m'
-    cGrey='\033[1;30m'
-    cRedLight='\033[1;31m'
-    cGreenLight='\033[1;32m'
-    cYellow='\033[0;33m'
-    cYellowLight='\033[1;33m'
-    cBlueLight='\033[1;34m'
-    cMagentaLight='\033[1;35m'
-    cCyanLight='\033[1;36m'
-    cWhite='\033[1;37m'
-    cWhiteBright='\u001b[37;1m'
-fi
-
 if [[ -z "$CONFIG_REPO" ]]; then
     CONFIG_REPO="/etc/postfix/repo"
 fi
 
 if [[ ! -e "$CONFIG_REPO" ]]; then
-    echo -e "${cYellowLight}WARNING${cReset} $CONFIG_REPO does not exist" >&2
+    echo "${cYellowLight}WARNING${cReset} $CONFIG_REPO does not exist" >&2
     return 1
 fi

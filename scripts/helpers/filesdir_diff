@@ -4,7 +4,7 @@ import shlex
 from shutil import copy2 as copy
 import sys
 
-from common import exists, meta, md5file, pbname, pjoin, qline, wrfile, wrjson
+from common import exists, meta, md5file, pabs, pbname, pjoin, qline, wrfile, wrjson
 
 class Result(object):
 
@@ -42,6 +42,7 @@ def cppatch(fromdir, todir, files):
 
 def main():
     title, srcdir, destdir, outdir = sys.argv[1:5]
+    outdir = pabs(outdir)
     commitdir = pjoin(outdir, '.'.join((title, 'new.d')))
     revertdir = pjoin(outdir, '.'.join((title, 'old.d')))
     jsonfile = pjoin(outdir, '.'.join((title, 'json')))

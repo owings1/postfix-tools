@@ -27,7 +27,7 @@ def rmpatch(keys):
 def udpatch(data, keys = None):
     entries = [(key, data[key]) for key in sorted(keys or data)]
     return '\n'.join((
-        'echo >> "$(postconf -h config_directory)/main.cf"',
+        'echo >> "/etc/postfix/main.cf"',
         'postconf -e \\',
         *[qline(eqstr(entry)) for entry in entries[0:-1]],
         qline(eqstr(entries[-1]), True),

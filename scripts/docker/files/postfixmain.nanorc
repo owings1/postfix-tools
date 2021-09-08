@@ -41,7 +41,7 @@ color brightmagenta "[[:space:]=,{](check_policy_service|sleep)([[:space:]}]|$)"
 
 # Postmaps, et al
 # "[[:space:]=,:](VALUES):"
-color brightyellow "[[:space:]=,:](proxy:)?(btree|cdb|dbm|fail|hash|lmdb|sdbm|pcre|static|nis|proxy|unix|local):"
+color brightyellow "[[:space:]=,:](proxy:)?(btree|cdb|dbm|fail|hash|lmdb|sdbm|pcre|static|nis|proxy|unix|local|lmtp):"
 
 
 # Multi keywords

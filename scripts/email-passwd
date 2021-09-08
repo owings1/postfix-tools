@@ -46,7 +46,6 @@ else
         input="$(echo -ne "$password\n$password\n")"
         pwdhash="$(doveadm pw -s "$alg" <<< "$input")"
     fi
-    echo "s'^$username:[^:]*:(.*)'$username:$pwdhash:\1'" "$pwdfile"
     cp "$pwdfile" "$pwdfile~"
     sed -E -i "s'^$username:[^:]*:(.*)'$username:$pwdhash:\1'" "$pwdfile"
 fi

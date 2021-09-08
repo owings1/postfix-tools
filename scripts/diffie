@@ -14,10 +14,8 @@ else
 fi
 
 log() {
-    local fdn
+    local fdn msg pfx
     local priority="$1"
-    local msg
-    local pfx
     if [[ "$priority" = err ]]; then
         fdn=2
         pfx="${cRed}ERROR${cReset} "
