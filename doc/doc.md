@@ -12,10 +12,10 @@ AGZvbwBKOTdxJD9FQEo9
 
 
 
-mail from: <root@dev>
-rcpt to: <file-test-q6e7WSgPLKXeerR2EnAMPaj4d6kHbMAk@mailer2>
-RCPT TO: <kate@fabrikam.com>
+mail from: <doug@dougowings.net>
+rcpt to: <curl-test@mail.dougowings.com>
 DATA
+
 Subject: test
 
 This is a test message.

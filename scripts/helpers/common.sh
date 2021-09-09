@@ -232,6 +232,7 @@ color_curl_smtp_status() {
     else
         echo "${cRedLight}FAIL${cReset} curl exited with status ${cRedLight}${status}${cReset}"
     fi
+    return "$status"
 }
 
 if is_saslauthd; then
