@@ -9,13 +9,10 @@ dir_="$(abs $(dirname "$0"))"
 files_="$dir_/files"
 helpers_="$(abs "$dir_/../helpers")"
 
-# disable kernel logging for docker
+# Dsable kernel logging for docker
 sed -i 's/^module.*"imklog".*/#\0/' /etc/rsyslog.conf
 # copy rsyslog conf
-cp "$files_/00-template.conf" \
-    "$files_/40-custom.conf" \
-    "$files_/50-default.conf" \
-    /etc/rsyslog.d/
+cp "$files_/syslog/"* /etc/rsyslog.d/
 
 pushdq /etc
 # chroot files
@@ -73,3 +70,6 @@ if is_dovecot || is_saslauthd ; then
     fi
 fi
 
+if is_spf ; then
+    "$dir_/dkim.sh"
+fi

@@ -1,7 +1,7 @@
 alias_database = hash:/etc/aliases
 alias_maps = hash:/etc/aliases
 biff = no
-compatibility_level = 2
+compatibility_level = 3
 inet_interfaces = all
 inet_protocols = ipv4
 mydestination = ${config_directory}/destinations
@@ -13,15 +13,12 @@ smtp_tls_security_level = encrypt
 smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 smtpd_banner = $myhostname ESMTP $mail_name
 smtpd_client_restrictions = check_client_access hash:${config_directory}/client_checks
-smtpd_recipient_restrictions = check_sender_access hash:${config_directory}/sender_checks
+smtpd_sender_restrictions = check_sender_access hash:${config_directory}/sender_checks
 smtpd_relay_restrictions = permit_mynetworks reject_unauth_destination
+smtpd_recipient_restrictions = 
 smtpd_reject_unlisted_recipient = no
 
 smtpd_tls_auth_only = yes
-# Obsolete, see http://www.postfix.org/postconf.5.html#smtpd_tls_chain_files
-#smtpd_tls_key_file = ${config_directory}/ssl/server.key
-#smtpd_tls_cert_file = ${config_directory}/ssl/certs/active/server.crt
-#smtpd_tls_CAfile = ${config_directory}/ssl/certs/active/ca.crt
 smtpd_tls_chain_files = ${config_directory}/ssl/server.key ${config_directory}/ssl/certs/active/server.crt ${config_directory}/ssl/certs/active/ca.crt
 smtpd_tls_dh1024_param_file = ${config_directory}/ssl/dh/active/dh1024.pem
 smtpd_tls_dh512_param_file = ${config_directory}/ssl/dh/active/dh512.pem
@@ -33,3 +30,7 @@ virtual_alias_maps = hash:${config_directory}/virtual
 local_recipient_maps = hash:/etc/auth/passwd.map
 
 smtpd_client_port_logging = yes
+
+# SPF
+#policyd-spf_time_limit = 3600
+#smtpd_recipient_restrictions = check_policy_service unix:private/policyd-spf

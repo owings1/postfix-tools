@@ -85,6 +85,21 @@ _run() {
         "$helpers/filesdir_diff" "dovecot_confd_files" "$srcdir/dovecot" /etc/dovecot/conf.d .
     fi
 
+    # SPF
+    if is_spf ; then
+        opts="--preserve=timestamps -bv --suffix=.$(date_path)"
+        if ! md5cmp "$srcdir/policyd-spf.conf" /etc/postfix-policyd-spf-python/policyd-spf.conf ; then
+            cp "$srcdir/policyd-spf.conf" policyd-spf.conf.new
+            cp /etc/postfix-policyd-spf-python/policyd-spf.conf policyd-spf.conf.old
+            local spfa="policy_spf_conf.apply.sh"
+            local spfr="policy_spf_conf.revert.sh"
+            diff policyd-spf.conf.old policyd-spf.conf.new | sed 's/^/# /' > "$spfa"
+            diff policyd-spf.conf.new policyd-spf.conf.old | sed 's/^/# /' > "$spfr"
+            echo "cd $builddirq && install -v -p -m 0644 \\" | teeq -a "$spfa" "$spfr"
+            echo "    policyd-spf.conf.new /etc/postfix-policyd-spf-python/policyd-spf.conf" >> "$spfa"
+            echo "    policyd-spf.conf.old /etc/postfix-policyd-spf-python/policyd-spf.conf" >> "$spfr"
+        fi
+    fi
     popdq
 
     find "$outdir" -type f -print0 | xargs -0 chmod 0644

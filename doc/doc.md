@@ -13,9 +13,12 @@ plain login
 AGZvbwBKOTdxJD9FQEo9
 
 
+mail from: <doug@dougowings.net>
+rcpt to: <file-test-q6e7WSgPLKXeerR2EnAMPaj4d6kHbMAk>
 
 mail from: <doug@dougowings.net>
 rcpt to: <curl-test@mail.dougowings.com>
+
 DATA
 
 Subject: test

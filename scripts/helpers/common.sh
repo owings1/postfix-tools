@@ -37,6 +37,10 @@ is_saslauthd() {
     command -v /usr/sbin/saslauthd > /dev/null
 }
 
+is_spf() {
+    command -v /usr/bin/policyd-spf > /dev/null
+}
+
 is_firstrun() {
     [[ ! -e /etc/first-run ]]
 }

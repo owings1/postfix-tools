@@ -16,6 +16,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     dovecot-core dovecot-imapd dovecot-lmtpd
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    opendkim opendkim-tools postfix-policyd-spf-python
+
 RUN apt-get update && apt-get install -y psmisc curl telnet less nano ccze
 
 EXPOSE 25 143 587

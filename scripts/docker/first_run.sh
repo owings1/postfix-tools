@@ -23,6 +23,7 @@ _run() {
     local dir_="$(abs "$(dirname "$0")")"
     local files_="$dir_/files"
     alias metaval="$dir_/../helpers/metaval"
+
     groupadd -g 500 postmaster || true
     useradd -m -g postmaster -s /usr/sbin/nologin postmaster || true
 
@@ -31,9 +32,9 @@ _run() {
     pushdq "$CONFIG_REPO"
     cp -nv "$files_/meta.json" .
     if is_dovecot ; then
-        cp -nv "$files_/dovecot.conf" .
+        cp -nv "$files_/dovecot/dovecot.conf" .
         mkdir -pv dovecot
-        cp -nv "$files_/"10-*.conf dovecot
+        cp -nv "$files_/dovecot/"10-*.conf dovecot
     fi
     # the main.cf and master.cf may be updated by install scripts
     cp -nv /etc/postfix/main.cf /etc/postfix/master.cf .
@@ -45,6 +46,10 @@ _run() {
         fi
     done
     popdq
+    # SPF
+    if is_spf ; then
+        cp -nv "$files_/dkim/policyd-spf.conf" .
+    fi
     popdq
 
     if is_dovecot ; then
