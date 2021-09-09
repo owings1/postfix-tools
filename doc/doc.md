@@ -1,3 +1,5 @@
+https://docs.nginx.com/nginx/admin-guide/mail-proxy/mail-proxy/
+
 ```
 openssl s_client -connect localhost:587 -starttls smtp
 helo localhost
@@ -49,6 +51,12 @@ This is a test message.
 # Delete all deferred messages
 
 `sudo postsuper -d ALL deferred`
+
+
+Get sha2 of cert
+```
+openssl x509 -in cert.pem -fingerprint -sha256 -noout
+```
 
 ```
 

@@ -7,7 +7,8 @@ RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime && \
 RUN echo "postmaster: root" > /etc/aliases && \
     echo "localhost" > /etc/mailname && \
     echo postfix postfix/main_mailer_type string "No configuration" && \
-    apt-get update && apt-get install -y postfix rsyslog
+    apt-get update && apt-get install -y \
+    postfix postfix-pcre rsyslog
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpam-pwquality libpam-cracklib pwgen

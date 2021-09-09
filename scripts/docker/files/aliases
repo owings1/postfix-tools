@@ -14,5 +14,7 @@ security: postmaster
 usenet: postmaster
 webmaster: postmaster
 www: webmaster
+curl-test: devnull
+null-test: devnull
+devnull: /dev/null
 file-test-q6e7WSgPLKXeerR2EnAMPaj4d6kHbMAk: /tmp/postfix-file-test
-null-test-y6nJszj32UWhczSsHTZZmcPGqcUhGs7R: /dev/null

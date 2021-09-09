@@ -33,8 +33,9 @@ pushdq "$files_"
 # nano syntax
 mkdir -p /usr/share/nano
 cp "$helpers_/"*.nanorc /usr/share/nano
-# bashrc
+# bashrc nanorc
 cp bashrc /root/.bashrc
+cp nanorc /root/.nanorc
 # aliases, environment
 cp aliases environment /etc
 newaliases
