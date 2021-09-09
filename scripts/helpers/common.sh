@@ -250,13 +250,20 @@ fi
 APP_LOGS+=(auth.log)
 if is_dovecot; then
     APP_LOGS+=(
-        dovecot.debug
+        dovecot.dbg
         dovecot.log
         dovecot.err
     )
 fi
+if is_spf ; then
+    APP_LOGS+=(
+        policy.dbg
+        policy.log
+        policy.err
+    )
+fi
 APP_LOGS+=(
-    postfix.debug
+    postfix.dbg
     postfix.log
     postfix.err
     reconfigure.log
