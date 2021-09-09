@@ -2,17 +2,22 @@ syntax "aliases" "\b(aliases|virtual)$"
 
 comment "#"
 
-color magenta "\b[a-z0-9._+-]+\b"
-color brightgreen "@[a-z0-9.-]+"
-color brightred "@[a-z0-9._+-]+\b$"
-color white,red "@localhost\b"
+# target domain
+color brightred "@[a-z0-9._+-]+"
+# target @
 color brightmagenta "@"
+# target username
+color magenta "\b[a-z0-9._+-]+@"
+
+# source domain
+color brightgreen "^[[:space:]a-z0-9.-]*@[a-z0-9.-]+"
+# source @
 color brightyellow "^[[:space:]]*[a-z0-9.-]+@"
+# source username
 color yellow "^[[:space:]]*[a-z0-9.-]+\b"
 
-color black,green "^[[:space:]]*@[a-z0-9.-]+"
-
-#color brightmagenta "^[[:space:]]*@"
+# keywords
+color brightblue "@localhost\b"
 
 # Comments
 color brightblack "(^|[[:space:]])#.*"
