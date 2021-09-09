@@ -1,0 +1,20 @@
+syntax "aliases" "\b(aliases|virtual)$"
+
+comment "#"
+
+color magenta "\b[a-z0-9._+-]+\b"
+color brightgreen "@[a-z0-9.-]+"
+color brightred "@[a-z0-9._+-]+\b$"
+color white,red "@localhost\b"
+color brightmagenta "@"
+color brightyellow "^[[:space:]]*[a-z0-9.-]+@"
+color yellow "^[[:space:]]*[a-z0-9.-]+\b"
+
+color black,green "^[[:space:]]*@[a-z0-9.-]+"
+
+#color brightmagenta "^[[:space:]]*@"
+
+# Comments
+color brightblack "(^|[[:space:]])#.*"
+color brightcyan "(^|[[:space:]])#{2,}.*"
+color brightblack "(^|[[:space:]])#{2,}*"
