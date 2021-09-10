@@ -50,6 +50,14 @@ _run() {
     if is_spf ; then
         cp -nv "$files_/dkim/policyd-spf.conf" .
     fi
+    # srsd
+    if is_srsd ; then
+        if [[ ! -e /etc/postsrsd.secret ]]; then
+            pwgen -s 32 1 > /etc/postsrsd.secret
+            chmod 0600 /etc/postsrsd.secret
+        fi
+        cp -nv "$files_/dkim/postsrsd" postsrsd.conf
+    fi
     popdq
 
     if is_dovecot ; then
@@ -59,12 +67,6 @@ _run() {
         mkdir -pv "$authdir"
         touch "$pwdfile" "$pwdfile.map"
         passwd_map "$pwdfile"
-    fi
-    if is_srsd ; then
-        if [[ ! -e /etc/postsrsd.secret ]]; then
-            pwgen -s 32 1 > /etc/postsrsd.secret
-            chmod 0600 /etc/postsrsd.secret
-        fi
     fi
 }
 

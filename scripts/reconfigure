@@ -102,6 +102,22 @@ _run() {
             echo "    policyd-spf.conf.old /etc/postfix-policyd-spf-python/policyd-spf.conf" >> "$spfr"
         fi
     fi
+
+    # SPF
+    if is_srsd ; then
+        opts="--preserve=timestamps -bv --suffix=.$(date_path)"
+        if ! md5cmp "$srcdir/postsrsd.conf" /etc/default/postsrsd ; then
+            cp "$srcdir/postsrsd.conf" postsrsd.conf.new
+            cp /etc/default/postsrsd postsrsd.conf.old
+            local srfa="postsrsd_conf.apply.sh"
+            local srfr="postsrsd_conf.revert.sh"
+            diff postsrsd.conf.old policyd-spf.conf.new | sed 's/^/# /' > "$srfa"
+            diff postsrsd.conf.new policyd-spf.conf.old | sed 's/^/# /' > "$srfr"
+            echo "cd $builddirq && install -v -p -m 0644 \\" | teeq -a "$srfa" "$srfr"
+            echo "    postsrsd.conf.new /etc/default/postsrsd" >> "$srfa"
+            echo "    postsrsd.conf.old /etc/default/postsrsd" >> "$srfr"
+        fi
+    fi
     popdq
 
     find "$outdir" -type f -print0 | xargs -0 chmod 0644
@@ -146,6 +162,7 @@ _run() {
 
     postfix_reload
     dovecot_reload
+    postsrsd_reload
 }
 
 run
