@@ -10,3 +10,9 @@ files_="$dir_/files"
 adduser postfix opendkim
 
 cp "$files_/dkim/policyd-spf.conf" /etc/postfix-policyd-spf-python
+
+if is_srsd ; then
+    cp "$files_/dkim/postsrsd" /etc/default/
+    rm -f /etc/postsrsd.secret
+fi
+

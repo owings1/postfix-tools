@@ -12,6 +12,9 @@ if is_dovecot ; then
 elif is_saslauthd ; then
     app_services+=("saslauthd")
 fi
+if is_srsd ; then
+    app_services+=("postsrsd")
+fi
 all_services=("rsyslog" "${app_services[@]}")
 
 start_all() {

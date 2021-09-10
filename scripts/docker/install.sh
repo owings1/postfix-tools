@@ -72,5 +72,5 @@ if is_dovecot || is_saslauthd ; then
 fi
 
 if is_spf ; then
-    "$dir_/dkim.sh"
+    "$dir_/spf.sh"
 fi

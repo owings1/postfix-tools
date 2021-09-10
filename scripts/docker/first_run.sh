@@ -60,6 +60,12 @@ _run() {
         touch "$pwdfile" "$pwdfile.map"
         passwd_map "$pwdfile"
     fi
+    if is_srsd ; then
+        if [[ ! -e /etc/postsrsd.secret ]]; then
+            pwgen -s 32 1 > /etc/postsrsd.secret
+            chmod 0600 /etc/postsrsd.secret
+        fi
+    fi
 }
 
 run

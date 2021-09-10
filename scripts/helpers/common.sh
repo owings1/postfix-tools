@@ -41,6 +41,10 @@ is_spf() {
     command -v /usr/bin/policyd-spf > /dev/null
 }
 
+is_srsd() {
+    command -v /usr/sbin/postsrsd > /dev/null
+}
+
 is_firstrun() {
     [[ ! -e /etc/first-run ]]
 }
@@ -247,7 +251,7 @@ declare -a APP_LOGS
 if is_docker ; then
     APP_LOGS+=(coordinator.log syslog)
 fi
-APP_LOGS+=(auth.log)
+APP_LOGS+=(auth.log reconfigure.log)
 if is_dovecot; then
     APP_LOGS+=(
         dovecot.dbg
@@ -266,7 +270,6 @@ APP_LOGS+=(
     postfix.dbg
     postfix.log
     postfix.err
-    reconfigure.log
 )
 if [[ -z "$CONFIG_REPO" ]]; then
     CONFIG_REPO="/etc/postfix/repo"
