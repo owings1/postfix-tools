@@ -2,7 +2,7 @@
 #  5 includes all debug messages.
 debugLevel = 1 
 
-#  If set to 0, no messages are rejected by SPF.  This allows you to see the 
+#  If set to 0, no messages are rejected by SPF.  This allows you to see the
 #  potential impact of SPF checking in your mail logs without rejecting mail.
 TestOnly = 1
 
@@ -14,7 +14,7 @@ TestOnly = 1
 #  HELO_reject = Softfail - Reject if result Softfail and Fail
 #  HELO_reject = Fail - Reject on HELO Fail
 #  HELO_reject = Null - Only reject HELO Fail for Null sender (SPF Classic)
-#  HELO_reject = False - Never reject/defer on HELO, append header only. 
+#  HELO_reject = False - Never reject/defer on HELO, append header only.
 #  HELO_reject = No_Check - Never check HELO.
 HELO_reject = Fail
 
@@ -38,7 +38,7 @@ Mail_From_reject = Fail
 
 #  Mail From pass restriction policy.
 #  Mail_From_pass_restriction = mfrom_passed_spf - Apply the given
-#    restriction when the Mail From checking result is Pass.  The given 
+#    restriction when the Mail From checking result is Pass.  The given
 #    restriction must be an action as defined for a Postfix SMTP server
 #    access table access(5).
 #Mail_From_pass_restriction
@@ -63,7 +63,7 @@ TempError_Defer = False
 #  address would pass.
 #  Prospective = 192.168.0.4
 
-#  Do not check SPF for localhost addresses - add to skip addresses to 
+#  Do not check SPF for localhost addresses - add to skip addresses to
 #  skip SPF for internal networks if desired. Defaults are standard IPv4 and
 #  IPv6 localhost addresses.
 skip_addresses = 127.0.0.0/8,::ffff:127.0.0.0/104,::1

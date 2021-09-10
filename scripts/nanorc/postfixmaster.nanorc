@@ -25,7 +25,7 @@ color brightmagenta "[[:space:]=,{](bounce|check_ccert_access|check_client_acces
 
 # Postmaps, et al
 # "[[:space:]=,:](VALUES):"
-color brightyellow "[[:space:]=,:]((btree|cdb|dbm|fail|hash|lmdb|sdbm|pcre|static|nis|proxy|unix|local|lmtp):)+"
+color brightyellow "[[:space:]=,:]((btree|cdb|dbm|fail|hash|lmdb|sdbm|pcre|static|nis|proxy|unix|local|lmtp|tcp):)+"
 
 
 # variables
