@@ -10,8 +10,7 @@ color yellow "^(home_mailbox|cyrus_sasl_config_path|forward_path|lmtp_sasl_path|
 # Variables
 color brightblue "\$\{[a-zA-Z0-9_{?$;[:space:]]+\}" "\$[a-zA-Z0-9_]+"
 color normal "[^$]\{.*?\}" ";"
-color brightblue "\$[a-zA-Z0-9_]+"
-color brightblue "\$"
+color brightblue "\$[a-zA-Z0-9_]+" "\$"
 color red "[?:<>]"
 
 

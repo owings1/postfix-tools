@@ -29,12 +29,10 @@ color brightyellow "[[:space:]=,:]((btree|cdb|dbm|fail|hash|lmdb|sdbm|pcre|stati
 
 
 # variables
-color brightcyan "\$\{[a-zA-Z0-9_{?$;[:space:]]+\}"
-color brightcyan "\$[a-zA-Z0-9_]+"
+color brightblue "\$\{[a-zA-Z0-9_{?$;[:space:]]+\}" "\$[a-zA-Z0-9_]+"
 #color normal "[^$]\{.*?\}"
 #color normal "[;]"
-color brightcyan "\$[a-zA-Z0-9_]+"
-color brightcyan "\$"
+color brightblue "\$[a-zA-Z0-9_]+" "\$"
 
 color magenta "^(smtp|submission|pickup|cleanup|qmgr|tlsmgr|rewrite|bounce|defer|trace|verify|flush|proxymap|proxywrite|smtp|relay|showq|error|retry|discard|local|virtual|lmtp|anvil|scache|postlog|maildrop|uucp|ifmail|bsmtp|scalemail-backend|mailman|policyd-spf|[0-9]+)[[:space:]]"
 

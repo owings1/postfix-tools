@@ -3,5 +3,7 @@ set -e
 
 source "$(dirname "$0")/helpers/common.sh"
 
+logfiles=("${APP_LOGS[@]}")
+
 cd /var/log
-tail -F $@ "${APP_LOGS[@]}" 2>/dev/null | ccze -A -o nolookups
+tail -F $@ "${logfiles[@]}" 2>/dev/null | ccze -A -o nolookups
