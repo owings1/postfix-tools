@@ -104,9 +104,11 @@ _run() {
     fi
 
     # SPF
+    local srsdchange=0
     if is_srsd ; then
         opts="--preserve=timestamps -bv --suffix=.$(date_path)"
         if ! md5cmp "$srcdir/postsrsd.conf" /etc/default/postsrsd ; then
+            srsdchange=1
             cp "$srcdir/postsrsd.conf" postsrsd.conf.new
             cp /etc/default/postsrsd postsrsd.conf.old
             local srfa="postsrsd_conf.apply.sh"
@@ -162,7 +164,10 @@ _run() {
 
     postfix_reload
     dovecot_reload
-    postsrsd_reload
+    if [[ "$srsdchange" = 1 ]]; then
+        service_stop postsrsd
+        service_start postsrsd
+    fi
 }
 
 run

@@ -104,19 +104,6 @@ dovecot_reload() {
     fi
 }
 
-postsrsd_reload() {
-    if is_srsd ; then
-        echo "Checking if postsrsd is up"
-        if service_up postsrsd ; then
-            echo "Reloading postsrsd config"
-            service_reload postsrsd
-            echo "Reloaded postsrsd config"
-        else
-            echo "Postsrsd is not running"
-        fi
-    fi
-}
-
 postfix_reload() {
     echo "Checking if postfix is up"
     if service_up postfix; then
