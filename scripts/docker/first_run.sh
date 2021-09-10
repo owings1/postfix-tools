@@ -57,6 +57,7 @@ _run() {
             chmod 0600 /etc/postsrsd.secret
         fi
         cp -nv "$files_/dkim/postsrsd" postsrsd.conf
+        cp -nv /etc/postfix/local_dsn_filter files
     fi
     popdq
 

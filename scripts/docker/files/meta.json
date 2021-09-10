@@ -2,6 +2,7 @@
   "hashfiles": [
     "client_checks",
     "sender_checks",
+    "local_dsn_filter",
     "virtual"
   ],
   "ignorekeys": [

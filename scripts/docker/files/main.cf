@@ -16,7 +16,7 @@ smtpd_banner = $myhostname ESMTP $mail_name
 smtpd_client_restrictions = check_client_access hash:${config_directory}/client_checks
 smtpd_sender_restrictions = check_sender_access hash:${config_directory}/sender_checks
 smtpd_relay_restrictions = permit_mynetworks reject_unauth_destination
-smtpd_recipient_restrictions = 
+smtpd_recipient_restrictions =
 smtpd_reject_unlisted_recipient = no
 
 smtpd_tls_auth_only = yes
@@ -36,8 +36,10 @@ smtpd_client_port_logging = yes
 #policyd-spf_time_limit = 3600
 #smtpd_recipient_restrictions = check_policy_service unix:private/policyd-spf
 # srsd
-#sender_canonical_maps = tcp:localhost:10001
-#sender_canonical_classes = envelope_sender
+#transport_destination_recipient_limit = 1
 #recipient_canonical_maps = tcp:localhost:10002
 #recipient_canonical_classes= envelope_recipient header_recipient
 
+#local_delivery_status_filter = pcre:/etc/postfix/local_dsn_filter
+#sender_canonical_maps = tcp:localhost:10001
+#sender_canonical_classes = envelope_sender
