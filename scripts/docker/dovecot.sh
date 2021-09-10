@@ -11,7 +11,7 @@ adduser dovecot mail
 
 pushdq /etc/dovecot
 cp -ab "$files_/dovecot/dovecot.conf" .
-cp "$files_/dh4096.pem" .
+cp "$files_/dovecot/dh4096.pem" .
 pushdq conf.d
 cp -ab "$files_/dovecot/"10-*.conf .
 popdq

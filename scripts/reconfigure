@@ -38,6 +38,7 @@ _run() {
     local outdir="$confdir/history/$(date_path)"
     local builddir="$outdir/build"
     local helpers="$thisdir/helpers"
+    local static="$thisdir/static"
     local builddirq="$(printf '%q' "$builddir")"
 
     echo "Writing update to $outdir"
@@ -52,7 +53,7 @@ _run() {
 
     # postfix master.cf
     postconf -M | cat "$helpers/mastercfhead.txt" - > master.cf.old
-    postconf -M -c "$srcdir" | cat "$helpers/mastercfhead.txt" - > master.cf.new
+    postconf -M -c "$srcdir" | cat "$static/mastercfhead.txt" - > master.cf.new
     if ! md5cmp master.cf.old master.cf.new ; then
         opts="--preserve=timestamps -v"
         local mcfa='postfix_master.apply.sh'

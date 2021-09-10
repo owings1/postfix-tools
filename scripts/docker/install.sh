@@ -7,7 +7,8 @@ source "$(dirname "$0")/../helpers/common.sh"
 
 dir_="$(abs $(dirname "$0"))"
 files_="$dir_/files"
-helpers_="$(abs "$dir_/../helpers")"
+scripts_="$(abs "$dir_/..")"
+helpers_="$scripts_/helpers"
 
 # Dsable kernel logging for docker
 sed -i 's/^module.*"imklog".*/#\0/' /etc/rsyslog.conf
@@ -29,12 +30,12 @@ ttyS1' > /etc/securetty
 pushdq "$files_"
 # nano syntax
 mkdir -p /usr/share/nano
-cp "$helpers_/"*.nanorc /usr/share/nano
+cp "$scripts_/nanorc/"*.nanorc /usr/share/nano
 # bashrc nanorc
-cp bashrc /root/.bashrc
-cp nanorc /root/.nanorc
+cp misc/bashrc /root/.bashrc
+cp misc/nanorc /root/.nanorc
 # aliases, environment
-cp aliases environment /etc
+cp misc/aliases misc/environment /etc
 newaliases
 popdq
 

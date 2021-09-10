@@ -9,7 +9,7 @@ files_="$dir_/files"
 
 # pam
 pushdq /etc/pam.d
-cp -b "$files_/common-password" .
+cp -b "$files_/misc/common-password" .
 # copy template for smtp service
 cp -an other smtp
 popdq

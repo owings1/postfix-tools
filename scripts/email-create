@@ -21,6 +21,7 @@ alg="$(metaval auth.alg)"
 pwopts="$(metaval auth.pwgenopts)"
 hdir="$(metaval auth.emaildir)"
 shell="$(metaval auth.shell)"
+authdir="$(dirname "$pwdfile")"
 pwlen="32"
 
 homedir="$hdir/$username"
@@ -36,6 +37,30 @@ info() {
 regex='^[^.-_][a-zA-Z0-9-_.]{3,64}$'
 if ! grep -qP "$regex" <<< "$username" ; then
     fail "Username must meet regex $cWhiteLight$regex$cReset"
+fi
+
+stripped_file() {
+    local src="$1"
+    local file="$(mktemp)"
+    grep -vP '^\s*#' "$src" > "$file"
+    echo "$file"
+}
+
+chkfile="$authdir/disallowed_usernames"
+if [[ -e "$chkfile" ]]; then
+    chkfile_="$(stripped_file "$chkfile")"
+    if grep -iq "^$username\$" "$chkfile_" ; then
+        fail "The username $ucolor is not allowed"
+    fi
+    rm "$chkfile_"
+fi
+chkfile="$authdir/disallowed_usernames_pcre"
+if [[ -e "$chkfile" ]]; then
+    chkfile_="$(stripped_file "$chkfile")"
+    if grep -iqP "^$username\$" "$chkfile" ; then
+        fail "The username $ucolor is not allowed"
+    fi
+    rm "$chkfile_"
 fi
 
 if [[ ! -e "$pwdfile" ]]; then
