@@ -36,14 +36,14 @@ color brightcyan "\$[a-zA-Z0-9_]+"
 color brightcyan "\$[a-zA-Z0-9_]+"
 color brightcyan "\$"
 
-color magenta "^(smtp|submission|pickup|cleanup|qmgr|tlsmgr|rewrite|bounce|defer|trace|verify|flush|proxymap|proxywrite|smtp|relay|showq|error|retry|discard|local|virtual|lmtp|anvil|scache|postlog|maildrop|uucp|ifmail|bsmtp|scalemail-backend|mailman|spawn|[0-9]+)[[:space:]]"
+color magenta "^(smtp|submission|pickup|cleanup|qmgr|tlsmgr|rewrite|bounce|defer|trace|verify|flush|proxymap|proxywrite|smtp|relay|showq|error|retry|discard|local|virtual|lmtp|anvil|scache|postlog|maildrop|uucp|ifmail|bsmtp|scalemail-backend|mailman|policyd-spf|[0-9]+)[[:space:]]"
 
-color brightmagenta "^(smtp|submission|pickup|cleanup|qmgr|tlsmgr|rewrite|bounce|defer|trace|verify|flush|proxymap|proxywrite|smtp|relay|showq|error|retry|discard|local|virtual|lmtp|anvil|scache|postlog|maildrop|uucp|ifmail|bsmtp|scalemail-backend|mailman|spawn|[0-9]+)[[:space:]]+inet"
+color brightmagenta "^(smtp|submission|pickup|cleanup|qmgr|tlsmgr|rewrite|bounce|defer|trace|verify|flush|proxymap|proxywrite|smtp|relay|showq|error|retry|discard|local|virtual|lmtp|anvil|scache|postlog|maildrop|uucp|ifmail|bsmtp|scalemail-backend|mailman|policyd-spf|[0-9]+)[[:space:]]+inet"
 
 color brightyellow "[[:space:]]inet[[:space:]]"
 color brightgreen "[[:space:]]smtpd([[:space:]]|$)"
 color yellow "[[:space:]](unix|unix-dgram)([[:space:]]|$)"
-color brightblue "[[:space:]](pickup|cleanup|qmgr|tlsmgr|trivial-rewrite|bounce|bounce|bounce|verify|flush|proxymap|proxymap|smtp|showq|error|error|discard|local|virtual|lmtp|anvil|scache|postlogd|pipe)([[:space:]]|$)"
+color brightblue "[[:space:]](pickup|cleanup|qmgr|tlsmgr|trivial-rewrite|bounce|bounce|bounce|verify|flush|proxymap|proxymap|smtp|showq|error|error|discard|local|virtual|lmtp|anvil|scache|postlogd|pipe|spawn)([[:space:]]|$)"
 
 # y/n
 color green "[[:space:]]y[[:space:]]"

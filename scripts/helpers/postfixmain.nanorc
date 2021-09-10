@@ -125,6 +125,7 @@ color brightwhite "\\[trn\\]"
 # Comments
 color brightblack "(^|[[:space:]])#.*"
 color brightcyan "(^|[[:space:]])#{2,}.*"
+color red "(^|[[:space:]])#{2,}[[:space:]]*={3,}"
 color brightblack "(^|[[:space:]])#{2,}*"
 # URLS
 color green "(ftp|https?|smtps?|ldap|lmtp|ssh):/\S+"
