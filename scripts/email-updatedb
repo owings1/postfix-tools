@@ -8,5 +8,13 @@ thisdir="$(abs `dirname "$0"`)"
 alias metaval="$thisdir/helpers/metaval"
 pwdfile="$(metaval auth.file)"
 
+fail() {
+    echo "${cRed}Error$cReset $@" >&2
+    exit 1
+}
+info() {
+    echo "$cGreen$uCaret$cReset $@"
+}
+
 passwd_map "$pwdfile" > /dev/null
 info "Updated passwd map"
