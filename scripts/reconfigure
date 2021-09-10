@@ -16,6 +16,7 @@ log() {
         fdn=2
         pfx="${cRed}ERROR${cReset} "
     else
+        pfx="$cGreen$uCaret$cReset "
         fdn=1
     fi
     while read msg ; do

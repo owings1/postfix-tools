@@ -66,9 +66,13 @@ defer
 defer_if_permit
 defer_if_reject
 defer_unauth_destination
+envelope_recipient
+envelope_sender
 export
 fast_flush_domains
 forward_secrecy
+header_recipient
+header_sender
 high
 ipv4
 ipv6

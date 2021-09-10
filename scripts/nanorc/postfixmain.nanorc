@@ -43,6 +43,8 @@ color brightmagenta "^(lmtp|smtpd?)_tls(_mandatory)?_ciphers[[:space:]]*=[[:spac
 color brightmagenta "^(tls_dane_digests)[[:space:]]*=[[:space:]]*((md5|sha1|sha256|sha512)([[:space:],]+|$))+"
 # parent_domain_matches_subdomains
 color brightmagenta "^(parent_domain_matches_subdomains)[[:space:]]*=[[:space:]]*((debug_peer_list|fast_flush_domains|mynetworks|permit_mx_backup_networks|postscreen_access_list|qmqpd_authorized_clients|relay_domains|smtpd_access_maps|smtpd_client_event_limit_exceptions|transport_maps)([[:space:],]+|$))+"
+# canonical_classes
+colro brightmagenta "^(canonical_classes|masquerade_classes|sender_canonical_classes)[[:space:]]*=[[:space:]]*((envelope_sender|envelope_recipient|header_sender|header_recipient)([[:space:],]+|$))+"
 
 # Single keywords
 #     "^(ATTRS)[[:space:]]*=[[:space:]]*(VALUES)[[:space:]]*$"
