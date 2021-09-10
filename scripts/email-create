@@ -54,10 +54,10 @@ if [[ -e "$chkfile" ]]; then
     fi
     rm "$chkfile_"
 fi
-chkfile="$authdir/disallowed_usernames_pcre"
+chkfile="$authdir/disallowed_usernames_re"
 if [[ -e "$chkfile" ]]; then
     chkfile_="$(stripped_file "$chkfile")"
-    if grep -iqP "^$username\$" "$chkfile" ; then
+    if grep -iqE -f "$chkfile_" <<< "$username" ; then
         fail "The username $ucolor is not allowed"
     fi
     rm "$chkfile_"
