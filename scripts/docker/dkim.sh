@@ -7,6 +7,10 @@ files_="$dir_/files"
 
 adduser postfix opendkim
 
+# patch init scripts
+cp "$files_/dkim/init" /etc/init.d/opendkim
+cp "$files_/dkim/default" /etc/default/opendkim
+
 cp "$files_/dkim/opendkim.conf" /etc/
 chmod 0644 /etc/opendkim.conf
 
@@ -16,3 +20,4 @@ chmod go-rw /etc/opendkim/keys
 pushdq /etc/opendkim
 touch signing.table key.table trusted.hosts
 popdq
+

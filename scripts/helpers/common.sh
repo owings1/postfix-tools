@@ -88,7 +88,7 @@ service_start() {
 service_stop() {
     if is_systemd ; then
         systemctl stop "$1"
-    elif is_docker && [[ "$1" == rsyslog ]]; then
+    elif is_docker && [[ "$1" = rsyslog ]]; then
         killall rsyslogd
     else
         service "$1" stop
@@ -268,6 +268,13 @@ if is_spf ; then
         policy.dbg
         policy.log
         policy.err
+    )
+fi
+if is_dkim ; then
+    APP_LOGS+=(
+        dkim.dbg
+        dkim.log
+        dkim.err
     )
 fi
 APP_LOGS+=(

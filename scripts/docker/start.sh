@@ -1,9 +1,9 @@
 #!/bin/bash
 
-cp /etc/hosts /var/spool/postfix/etc/hosts
-
 source "$(dirname "$0")/../helpers/common.sh" || exit 1
+
 alias log="/usr/bin/logger -t coordinator"
+
 dir_="$(abs "$(dirname "$0")")"
 
 app_services=("postfix")
@@ -14,6 +14,9 @@ elif is_saslauthd ; then
 fi
 if is_srsd ; then
     app_services+=("postsrsd")
+fi
+if is_dkim ; then
+   app_services+=("opendkim")
 fi
 all_services=("rsyslog" "${app_services[@]}")
 
@@ -60,6 +63,7 @@ on_sigterm() {
     kill -SIGTERM "$mainpid"
 }
 
+cp /etc/hosts /var/spool/postfix/etc/hosts
 "$dir_/fix_perms.sh"
 
 service_start rsyslog || exit 1
@@ -74,19 +78,20 @@ tail -F -n 0 "${logfiles[@]}" 2>/dev/null &
 mainpid="$!"
 popdq
 
+fatalerr=
 exit=0
 
 if is_firstrun ; then
     if "$dir_/first_run.sh" ; then
         touch /etc/first-run
     else
-        echo "FATAL: first_run.sh failed" >&2
+        fatalerr="FATAL: first_run.sh failed"
         exit=1
     fi
 fi
 
 if ! LOGONLY=1 /app/scripts/reconfigure ; then
-    echo "FATAL: reconfigure failed" >&2
+    fatalerr="FATAL: reconfigure failed"
     exit=1
 fi
 
@@ -98,13 +103,15 @@ verify_up() {
     local svc
     for svc in "${all_services[@]}" ; do
         if ! service_up "$svc" 2>&1 1>/dev/null ; then
-            echo "FATAL: $svc failed to start" >&2
+            fatalerr="FATAL: $svc failed to start"
             exit=1
         fi
     done
     if [[ "$exit" != 0 ]]; then
+        echo "Error: $fatalerr" >&2
+        log -p err "$fatalerr"
         stop_all
-        kill -SIGTERM "$mainpid"
+        kill "$mainpid"
     else
         log "Services are running"
     fi
