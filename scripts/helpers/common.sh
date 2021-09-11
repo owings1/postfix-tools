@@ -148,6 +148,21 @@ passwd_map() {
     echo "Updated passwd map"
 }
 
+passwd_map() {
+    local pwdfile="$1"
+    local mapfile="$pwdfile.map"
+    sed 's/:.*/ ./' "$pwdfile" > "$mapfile" &&
+    postmap "$mapfile" &&
+    echo "Updated passwd map"
+}
+
+passwd_tlsdb() {
+    local pwdfile="$1"
+    local dbfile="$pwdfile.tls"
+    sed 's#:.*#/valid::::::#' "$pwdfile" > "$dbfile" &&
+    echo "Updated passwd tls db"
+}
+
 md5cmp() {
     [[ -e "$1" ]] &&
     [[ -e "$2" ]] &&

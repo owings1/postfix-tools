@@ -18,3 +18,6 @@ info() {
 
 passwd_map "$pwdfile" > /dev/null
 info "Updated passwd map"
+
+passwd_tls_map "$pwdfile" > /dev/null
+info "Updated TLS db"
