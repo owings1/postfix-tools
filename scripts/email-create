@@ -10,7 +10,7 @@ fi
 
 source "$(dirname "$0")/helpers/common.sh"
 
-ucolor="$cCyan$username$cReset"
+
 thisdir="$(abs `dirname "$0"`)"
 
 alias metaval="$thisdir/helpers/metaval"
@@ -34,10 +34,20 @@ info() {
     echo "$cGreen$uCaret$cReset $@"
 }
 
-regex='^[^.-_][a-zA-Z0-9-_.]{3,64}$'
+if [[ "${#username}" -lt 5 ]] || [[ "${#username}" -gt 64 ]]; then
+    fail "Username must be between 5 and 64 chars"
+fi
+
+regex="^[^.-][a-z0-9_.-]+(@[a-z0-9-]+\.[a-z0-9-.]+)?$"
+#regex='^[^.-_][a-z0-9-_.]{3,64}$'
 if ! grep -qP "$regex" <<< "$username" ; then
     fail "Username must meet regex $cWhiteLight$regex$cReset"
 fi
+
+ucolor="$cCyan$username$cReset"
+name="$(sed 's/@.*//' <<< "$username")"
+#username="$(sed 's/@/=/g' <<< "$username")"
+ncolor="$cCyan$name$cReset"
 
 stripped_file() {
     local src="$1"
@@ -49,16 +59,16 @@ stripped_file() {
 chkfile="$authdir/disallowed_usernames"
 if [[ -e "$chkfile" ]]; then
     chkfile_="$(stripped_file "$chkfile")"
-    if grep -iq "^$username\$" "$chkfile_" ; then
-        fail "The username $ucolor is not allowed"
+    if grep -iq "^$name\$" "$chkfile_" ; then
+        fail "The name $ncolor is not allowed"
     fi
     rm "$chkfile_"
 fi
 chkfile="$authdir/disallowed_usernames_re"
 if [[ -e "$chkfile" ]]; then
     chkfile_="$(stripped_file "$chkfile")"
-    if grep -iqE -f "$chkfile_" <<< "$username" ; then
-        fail "The username $ucolor is not allowed"
+    if grep -iqE -f "$chkfile_" <<< "$name" ; then
+        fail "The name $ncolor is not allowed"
     fi
     rm "$chkfile_"
 fi
@@ -74,14 +84,18 @@ if [[ -z "$gid" ]]; then
     groupadd -g "$gid" "$gname"
 fi
 
-if grep -q "^$username:" "$pwdfile" ; then
+if grep -iq "^$username:" "$pwdfile" ; then
     fail "User $ucolor already exists"
 fi
-if grep -q "^$username:" /etc/passwd ; then
+if grep -iq "^$username:" /etc/passwd ; then
     fail "User $ucolor is a system user"
 fi
-if grep -q "^$username:" /etc/aliases ; then
+if grep -iq "^$username:" /etc/aliases ; then
     fail "User $ucolor is a system alias"
+fi
+
+if [[ -e "$hdir" ]]; then
+    fail "Directory already exists: $cYellow$hdir$cReset"
 fi
 
 lastid="$(awk -F: '{print $3":"$4}' "$pwdfile" | grep ":$gid\$" | awk -F: '{print $1}' | sort | tail -n 1)"

@@ -135,7 +135,7 @@ check_okpassword() {
     local regex='^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*)(}{])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8,}$'
     local rxdesc='Password must be at least 12 chars, two uppercase, three lower, two digits, one special'
     if ! grep -qP "$regex" <<< "$pwd" ; then
-        echo "Bad password: " >&2
+        echo "Bad password: $rxdesc" >&2
         return 1
     fi
 }

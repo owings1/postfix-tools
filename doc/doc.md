@@ -27,43 +27,76 @@ This is a test message.
 .
 ```
 
+```
 # Print postfix version
 
-`postconf mail_version`
+postconf mail_version
 
 # Check is running
 
-`sudo systemctl is-active --quiet postfix.service`
+sudo systemctl is-active --quiet postfix.service
 
-# Reload config
+```
 
-`sudo systemctl reload postfix.service`
-
-# Watch logs
-
-`tail -f -n 0 /var/log/mail.err /var/log/mail.log`
-
+```
 # Check queue
 
-`postqueue -p`
+postqueue -p
+
+# Flush queue
+
+postqueue -f
 
 # View message (deferred and pending)
 
-`sudo postcat -vq <ID>`
+sudo postcat -vq <ID>
     
 # Delete all deferred messages
 
-`sudo postsuper -d ALL deferred`
-
-
-Get sha2 of cert
+sudo postsuper -d ALL deferred
 ```
+
+
+```
+# Get sha2 of cert
+
 openssl x509 -in cert.pem -fingerprint -sha256 -noout
 ```
 
 ```
+## Create DKIM key
 
+# See: https://www.linode.com/docs/email/postfix/configure-spf-and-dkim-in-postfix-on-debian-9
 
+# Set vars
+ID=<YYYYMM>
+DOMAIN=<my.domain>
+
+# Gen key
+cd /etc/opendkim
+opendkim-genkey -b 2048 -h rsa-sha256 -r -s "$ID" -d "$DOMAIN" -v
+mv "$ID.private" "keys/$DOMAIN.private"
+mv "$ID.txt" "keys/$DOMAIN.txt"
+
+# extract string from .txt, replace h=rsa-sha256 with h=sha256, save to keys/$DOMAIN.value
+
+# Set perms
+chown opendkim:opendkim keys/*
+chmod 0600 keys/*
+
+# create DNS record $ID._domainkey
+
+# Test record
+opendkim-testkey -d "$DOMAIN" -s "$ID"
+
+# Add records to signing.table and key.table
+
+# Restart opendkim
+systemctl restart opendkim
+systemctl status opendkim
+```
+
+```
 #--------------#
 # Check TLS    #
 #--------------#

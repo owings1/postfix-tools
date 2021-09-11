@@ -13,7 +13,7 @@ RUN echo "postmaster: root" > /etc/aliases && \
     apt-get clean
 
 RUN apt-get update -qq && apt-get install -qy --no-install-recommends \
-    libpam-pwquality libpam-cracklib pwgen && \
+    libsasl2-modules libpam-pwquality libpam-cracklib pwgen && \
     apt-get clean
 
 RUN apt-get update -qq && apt-get install -qy --no-install-recommends \
