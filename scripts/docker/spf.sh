@@ -17,9 +17,9 @@ cp "$files_/dkim/policyd-spf.conf" /etc/postfix-policyd-spf-python
 if is_srsd ; then
     cp "$files_/dkim/postsrsd" /etc/default/
     rm -f /etc/postsrsd.secret
-    echo '/^(2\S+ deliver(s|ed) to file).+/    $1
-/^(2\S+ deliver(s|ed) to command).+/ $1
-/^(\S+ Command died with status \d+):.*(\. Command output:.*)/ $1$2
+    echo '""/^(2\S+ deliver(s|ed) to file).+/"    $1
+"/^(2\S+ deliver(s|ed) to command).+/" $1
+"/^(\S+ Command died with status \d+):.*(\. Command output:.*)/" $1$2
 ' > /etc/postfix/local_dsn_filter
 fi
 
