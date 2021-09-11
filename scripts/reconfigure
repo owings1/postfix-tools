@@ -105,9 +105,9 @@ _run() {
     if is_spf ; then
         if ! md5cmp "$srcdir/policyd-spf.conf" /etc/postfix-policyd-spf-python/policyd-spf.conf ; then
             cp "$srcdir/policyd-spf.conf" policyd-spf.conf.new
-            cp /etc/postfix-policyd-spf-python/policyd-spf.conf policyd-spf.conf.old \
+            cp /etc/postfix-policyd-spf-python/policyd-spf.conf policyd-spf.conf.old
+            make_file_actions policyd-spf.conf.old policyd-spf.conf.new \
                 /etc/postfix-policyd-spf-python/policyd-spf.conf policy_spf_conf
-            make_file_actions policyd-spf.conf.old policyd-spf.conf.new
             #local spfa="policy_spf_conf.apply.sh"
             #local spfr="policy_spf_conf.revert.sh"
             #diff policyd-spf.conf.old policyd-spf.conf.new | sed 's/^/# /' > "$spfa"
