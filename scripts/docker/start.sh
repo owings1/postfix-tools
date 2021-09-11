@@ -15,7 +15,7 @@ fi
 if is_srsd ; then
     app_services+=("postsrsd")
 fi
-if is_dkim ; then
+if is_dkim_enabled ; then
    app_services+=("opendkim")
 fi
 all_services=("rsyslog" "${app_services[@]}")

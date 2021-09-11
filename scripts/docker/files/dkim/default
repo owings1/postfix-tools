@@ -3,6 +3,7 @@
 #DAEMON_OPTS=""
 
 RUNDIR=/var/spool/postfix/opendkim
+SOCKET="local:/var/spool/postfix/opendkim/opendkim.sock"
 
 USER=opendkim
 GROUP=opendkim

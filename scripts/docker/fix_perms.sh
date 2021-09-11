@@ -41,9 +41,9 @@ chown root:postdrop \
     postqueue
 popdq
 
-if is_dkim; then
+if is_dkim_enabled; then
     chown -R opendkim:opendkim /etc/opendkim
     mkdir -p /var/spool/postfix/opendkim
-    chown opendkim:opendkim /var/spool/postfix/opendkim
+    chown opendkim:postfix /var/spool/postfix/opendkim
     chmod 0775 /var/spool/postfix/opendkim
 fi

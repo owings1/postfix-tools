@@ -9,6 +9,7 @@ alias postfix=/usr/sbin/postfix
 alias postmap=/usr/sbin/postmap
 alias postconf=/usr/sbin/postconf
 alias service=/usr/sbin/service
+
 if [[ -t 0 ]]; then
     alias is_term=true
 else
@@ -47,6 +48,10 @@ is_srsd() {
 
 is_dkim() {
     command -v /usr/sbin/opendkim > /dev/null
+}
+
+is_dkim_enabled() {
+    [[ ! -z "$DKIM_ENABLED" ]] && is_dkim
 }
 
 is_firstrun() {
@@ -270,7 +275,7 @@ if is_spf ; then
         policy.err
     )
 fi
-if is_dkim ; then
+if is_dkim_enabled ; then
     APP_LOGS+=(
         dkim.dbg
         dkim.log

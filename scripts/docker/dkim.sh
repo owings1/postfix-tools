@@ -20,4 +20,3 @@ chmod go-rw /etc/opendkim/keys
 pushdq /etc/opendkim
 touch signing.table key.table trusted.hosts
 popdq
-

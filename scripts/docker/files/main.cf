@@ -32,10 +32,10 @@ local_recipient_maps = hash:/etc/auth/passwd.map
 
 smtpd_client_port_logging = yes
 
-# SPF
+## SPF
 #policyd-spf_time_limit = 3600
 #smtpd_recipient_restrictions = check_policy_service unix:private/policyd-spf
-# srsd, see https://github.com/zoni/postforward
+## srsd, see https://github.com/zoni/postforward
 #transport_destination_recipient_limit = 1
 #recipient_canonical_maps = tcp:localhost:10002
 #recipient_canonical_classes = envelope_recipient header_recipient
@@ -43,7 +43,12 @@ smtpd_client_port_logging = yes
 #sender_canonical_classes = envelope_sender
 #local_delivery_status_filter = pcre:/etc/postfix/local_dsn_filter
 
-# postforward -- experimental? - unset:
+## postforward -- experimental? - unset:
 #sender_canonical_maps =
 #sender_canonical_classes =
 
+## OpenDKIM
+#milter_default_action = accept
+#milter_protocol = 6
+#smtpd_milters = local:opendkim/opendkim.sock
+#non_smtpd_milters = local:opendkim/opendkim.sock
