@@ -59,6 +59,18 @@ _run() {
         cp -nv "$files_/dkim/postsrsd" postsrsd.conf
         cp -nv /etc/postfix/local_dsn_filter files
     fi
+    # dkim
+    #if is_dkim ; then
+    #    cp -nv "$files_dkim/opendkim.conf" /etc/
+    #    [[ -e opendkim ]] || mkdir opendkim
+    #    pushdq opendkim
+    #    for file in signing.table key.table trusted.hosts ; do
+    #        if [[ ! -e "$file" ]]; then
+    #            touch "$file"
+    #        fi
+    #    done
+    #    popdq
+    #fi
     popdq
 
     if is_dovecot ; then

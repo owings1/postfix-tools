@@ -10,8 +10,6 @@ source "$(dirname "$0")/../helpers/common.sh"
 dir_="$(abs $(dirname "$0"))"
 files_="$dir_/files"
 
-adduser postfix opendkim
-
 cp "$files_/dkim/policyd-spf.conf" /etc/postfix-policyd-spf-python
 
 if is_srsd ; then

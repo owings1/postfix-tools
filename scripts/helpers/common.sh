@@ -45,6 +45,10 @@ is_srsd() {
     command -v /usr/sbin/postsrsd > /dev/null
 }
 
+is_dkim() {
+    command -v /usr/sbin/opendkim > /dev/null
+}
+
 is_firstrun() {
     [[ ! -e /etc/first-run ]]
 }

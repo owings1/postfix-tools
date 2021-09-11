@@ -52,18 +52,32 @@ _run() {
         "$helpers/postfixmain_diff" main.cf.old main.cf.new .
     fi
 
+    make_file_actions() {
+        local oldfile="$1"
+        local newfile="$2"
+        local dest="$3"
+        local title="$4"
+        local apfile="$title.apply.sh"
+        local rvfile="$title.revert.sh"
+        diff "$oldfile" "$newfile" | sed 's/^/# /' > > "$apfile"
+        diff "$newfile" "$oldfile" | sed 's/^/# /' > > "$rvfile"
+        echo "cd $builddirq && install -v -p -m 0644 \\" | teeq -a "$apfile" "$rvfile"
+        echo "    $newfile $dest" >> "$apfile"
+        echo "    $oldfile $dest" >> "$rvfile"
+    }
+
     # postfix master.cf
     postconf -M | cat "$static/mastercfhead.txt" - > master.cf.old
     postconf -M -c "$srcdir" | cat "$static/mastercfhead.txt" - > master.cf.new
     if ! md5cmp master.cf.old master.cf.new ; then
-        opts="--preserve=timestamps -v"
-        local mcfa='postfix_master.apply.sh'
-        local mcfr='postfix_master.revert.sh'
-        diff master.cf.old master.cf.new | sed 's/^/# /' > "$mcfa"
-        diff master.cf.new master.cf.old | sed 's/^/# /' > "$mcfr"
-        echo "cd $builddirq && install -v -p -m 0644 \\" | teeq -a "$mcfa" "$mcfr"
-        echo "    master.cf.new /etc/postfix/master.cf" >> "$mcfa"
-        echo "    master.cf.old /etc/postfix/master.cf" >> "$mcfr"
+        make_file_actions master.cf.old master.cf.new /etc/postfix/master.cf postfix_master
+        #local mcfa='postfix_master.apply.sh'
+        #local mcfr='postfix_master.revert.sh'
+        #diff master.cf.old master.cf.new | sed 's/^/# /' > "$mcfa"
+        #diff master.cf.new master.cf.old | sed 's/^/# /' > "$mcfr"
+        #echo "cd $builddirq && install -v -p -m 0644 \\" | teeq -a "$mcfa" "$mcfr"
+        #echo "    master.cf.new /etc/postfix/master.cf" >> "$mcfa"
+        #echo "    master.cf.old /etc/postfix/master.cf" >> "$mcfr"
     fi
 
     # postfix files
@@ -71,17 +85,17 @@ _run() {
 
     if is_dovecot; then
         # dovecot.conf
-        opts="--preserve=timestamps -bv --suffix=.$(date_path)"
         if ! md5cmp "$srcdir/dovecot.conf" /etc/dovecot/dovecot.conf ; then
             cp "$srcdir/dovecot.conf" dovecot.conf.new
             cp /etc/dovecot/dovecot.conf dovecot.conf.old
-            local dcfa="dovecot_dot_conf.apply.sh"
-            local dcfr="dovecot_dot_conf.revert.sh"
-            diff dovecot.conf.old dovecot.conf.new | sed 's/^/# /' > "$dcfa"
-            diff dovecot.conf.new dovecot.conf.old | sed 's/^/# /' > "$dcfr"
-            echo "cd $builddirq && install -v -p -m 0644 \\" | teeq -a "$dcfa" "$dcfr"
-            echo "    dovecot.conf.new /etc/dovecot/dovecot.conf" >> "$dcfa"
-            echo "    dovecot.conf.old /etc/dovecot/dovecot.conf" >> "$dcfr"
+            make_file_actions dovecot.conf.old dovecot.conf.new /etc/dovecot/dovecot.conf dovecot_dot_conf
+            #local dcfa="dovecot_dot_conf.apply.sh"
+            #local dcfr="dovecot_dot_conf.revert.sh"
+            #diff dovecot.conf.old dovecot.conf.new | sed 's/^/# /' > "$dcfa"
+            #diff dovecot.conf.new dovecot.conf.old | sed 's/^/# /' > "$dcfr"
+            #echo "cd $builddirq && install -v -p -m 0644 \\" | teeq -a "$dcfa" "$dcfr"
+            #echo "    dovecot.conf.new /etc/dovecot/dovecot.conf" >> "$dcfa"
+            #echo "    dovecot.conf.old /etc/dovecot/dovecot.conf" >> "$dcfr"
         fi
         # dovecot/conf.d files
         "$helpers/filesdir_diff" "dovecot_confd_files" "$srcdir/dovecot" /etc/dovecot/conf.d .
@@ -89,38 +103,48 @@ _run() {
 
     # SPF
     if is_spf ; then
-        opts="--preserve=timestamps -bv --suffix=.$(date_path)"
         if ! md5cmp "$srcdir/policyd-spf.conf" /etc/postfix-policyd-spf-python/policyd-spf.conf ; then
             cp "$srcdir/policyd-spf.conf" policyd-spf.conf.new
-            cp /etc/postfix-policyd-spf-python/policyd-spf.conf policyd-spf.conf.old
-            local spfa="policy_spf_conf.apply.sh"
-            local spfr="policy_spf_conf.revert.sh"
-            diff policyd-spf.conf.old policyd-spf.conf.new | sed 's/^/# /' > "$spfa"
-            diff policyd-spf.conf.new policyd-spf.conf.old | sed 's/^/# /' > "$spfr"
-            echo "cd $builddirq && install -v -p -m 0644 \\" | teeq -a "$spfa" "$spfr"
-            echo "    policyd-spf.conf.new /etc/postfix-policyd-spf-python/policyd-spf.conf" >> "$spfa"
-            echo "    policyd-spf.conf.old /etc/postfix-policyd-spf-python/policyd-spf.conf" >> "$spfr"
+            cp /etc/postfix-policyd-spf-python/policyd-spf.conf policyd-spf.conf.old \
+                /etc/postfix-policyd-spf-python/policyd-spf.conf policy_spf_conf
+            make_file_actions policyd-spf.conf.old policyd-spf.conf.new
+            #local spfa="policy_spf_conf.apply.sh"
+            #local spfr="policy_spf_conf.revert.sh"
+            #diff policyd-spf.conf.old policyd-spf.conf.new | sed 's/^/# /' > "$spfa"
+            #diff policyd-spf.conf.new policyd-spf.conf.old | sed 's/^/# /' > "$spfr"
+            #echo "cd $builddirq && install -v -p -m 0644 \\" | teeq -a "$spfa" "$spfr"
+            #echo "    policyd-spf.conf.new /etc/postfix-policyd-spf-python/policyd-spf.conf" >> "$spfa"
+            #echo "    policyd-spf.conf.old /etc/postfix-policyd-spf-python/policyd-spf.conf" >> "$spfr"
         fi
     fi
 
     # SPF
     local srsdchange=0
     if is_srsd ; then
-        opts="--preserve=timestamps -bv --suffix=.$(date_path)"
         if ! md5cmp "$srcdir/postsrsd.conf" /etc/default/postsrsd ; then
             srsdchange=1
             cp "$srcdir/postsrsd.conf" postsrsd.conf.new
             cp /etc/default/postsrsd postsrsd.conf.old
-            local srfa="postsrsd_conf.apply.sh"
-            local srfr="postsrsd_conf.revert.sh"
-            diff postsrsd.conf.old policyd-spf.conf.new | sed 's/^/# /' > "$srfa"
-            diff postsrsd.conf.new policyd-spf.conf.old | sed 's/^/# /' > "$srfr"
-            echo "cd $builddirq && install -v -p -m 0644 \\" | teeq -a "$srfa" "$srfr"
-            echo "    postsrsd.conf.new /etc/default/postsrsd" >> "$srfa"
-            echo "    postsrsd.conf.old /etc/default/postsrsd" >> "$srfr"
+            make_file_actions postsrsd.conf.old postsrsd.conf.new /etc/default/postsrsd postsrsd_conf
+            #local srfa="postsrsd_conf.apply.sh"
+            #local srfr="postsrsd_conf.revert.sh"
+            #diff postsrsd.conf.old policyd-spf.conf.new | sed 's/^/# /' > "$srfa"
+            #diff postsrsd.conf.new policyd-spf.conf.old | sed 's/^/# /' > "$srfr"
+            #echo "cd $builddirq && install -v -p -m 0644 \\" | teeq -a "$srfa" "$srfr"
+            #echo "    postsrsd.conf.new /etc/default/postsrsd" >> "$srfa"
+            #echo "    postsrsd.conf.old /etc/default/postsrsd" >> "$srfr"
         fi
     fi
     popdq
+
+    ## DKIM
+    #if is_dkim ; then
+    #    if ! md5smp "$srcdir/opendkim.conf" /etc/opendkim.conf ; then
+    #        cp "$srcdir/opendkim.conf" opendkim_conf.new
+    #        cp /etc/opendkim.conf opendkim_conf.old
+    #        make_file_actions opendkim_conf.old opendkim_conf.new /etc/opendkim.conf opendkim_conf
+    #    fi
+    #fi
 
     find "$outdir" -type f -print0 | xargs -0 chmod 0644
     local applyfiles

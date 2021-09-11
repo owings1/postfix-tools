@@ -74,3 +74,6 @@ fi
 if is_spf ; then
     "$dir_/spf.sh"
 fi
+if is_dkim; then
+    "$dir_/dkim.sh"
+fi
