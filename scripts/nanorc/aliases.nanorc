@@ -4,20 +4,27 @@ comment "#"
 
 # target domain
 color brightred "@[a-z0-9._+-]+"
-# target @
-color brightmagenta "@"
 # target username
 color magenta "\b[a-z0-9._+-]+@"
+# target @
+color brightmagenta "@"
 
 # source domain
-color brightgreen "^[[:space:]a-z0-9.-]*@[a-z0-9.-]+"
+color yellow "^[[:space:]a-z0-9.-]*@[a-z0-9.-]+"
 # source @
 color brightyellow "^[[:space:]]*[a-z0-9.-]+@"
 # source username
-color yellow "^[[:space:]]*[a-z0-9.-]+\b"
+color brightgreen "^[[:space:]]*[a-z0-9.-]+\b"
+
+# Services, maps, et al
+# "[[:space:]=,:](VALUES):"
+color brightyellow "[[:space:]=,:]((btree|cdb|dbm|fail|hash|lmdb|sdbm|pcre|static|nis|proxy|unix|local|lmtp|tcp):)+"
 
 # keywords
 color brightblue "@localhost\b"
+
+# Brackets
+color red "[\[\]]"
 
 # Comments
 color brightblack "(^|[[:space:]])#.*"
