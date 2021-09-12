@@ -41,7 +41,7 @@ ENV CONFIG_REPO /source
 WORKDIR /source
 COPY scripts /app/scripts
 VOLUME /source
-VOLUME /home/email
+VOLUME /var/mail
 VOLUME /etc/auth
 RUN /app/scripts/docker/install.sh
 CMD ["/bin/bash", "/app/scripts/docker/start.sh"]

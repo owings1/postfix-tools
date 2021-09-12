@@ -6,7 +6,8 @@ source "$(dirname "$0")/helpers/common.sh"
 
 thisdir="$(abs `dirname "$0"`)"
 alias metaval="$thisdir/helpers/metaval"
-pwdfile="$(metaval auth.file)"
+authdir="$(metaval auth.dir)"
+pwdfile="$authdir/users.passwd"
 alg="$(metaval auth.alg)"
 
 username="$1"
@@ -40,12 +41,9 @@ fi
 
 check_okpassword "$password"
 
-if [[ "$pwdfile" = '/etc/passwd' ]]; then
-    chpasswd <<< "$username:$password"
-else
-    printf -v input '%s\n%s\n' "$password" "$password"
-    pwdhash="$(doveadm pw -s "$alg" -u "$username" <<< "$input")"
-    cp "$pwdfile" "$pwdfile~"
-    sed -E -i "s'^$username:[^:]*:(.*)'$username:$pwdhash:\1'" "$pwdfile"
-fi
+printf -v input '%s\n%s\n' "$password" "$password"
+pwdhash="$(doveadm pw -s "$alg" -u "$username" <<< "$input")"
+cp "$pwdfile" "$pwdfile~"
+sed -E -i "s'^$username:[^:]*:(.*)'$username:$pwdhash:\1'" "$pwdfile"
+
 echo "Password updated"

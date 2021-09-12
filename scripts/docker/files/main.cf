@@ -28,7 +28,7 @@ smtpd_tls_security_level = may
 smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
 virtual_alias_domains = ${config_directory}/virtual_alias_domains
 virtual_alias_maps = hash:${config_directory}/virtual
-local_recipient_maps = hash:/etc/auth/passwd.map
+local_recipient_maps = hash:/etc/auth/users.map
 
 smtpd_client_port_logging = yes
 

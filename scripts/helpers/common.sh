@@ -142,25 +142,17 @@ check_okpassword() {
 
 passwd_map() {
     local pwdfile="$1"
-    local mapfile="$pwdfile.map"
-    sed 's/:.*/ ./' "$pwdfile" > "$mapfile" &&
+    local mapfile="$(abs "$(dirname "$pwdfile")")/users.map"
+    awk -F: '{print $1" "$6}' "$pwdfile" > "$mapfile" &&
     postmap "$mapfile" &&
-    echo "Updated passwd map"
-}
-
-passwd_map() {
-    local pwdfile="$1"
-    local mapfile="$pwdfile.map"
-    sed 's/:.*/ ./' "$pwdfile" > "$mapfile" &&
-    postmap "$mapfile" &&
-    echo "Updated passwd map"
+    echo "Updated users map"
 }
 
 passwd_tlsdb() {
     local pwdfile="$1"
-    local dbfile="$pwdfile.tls"
+    local dbfile="$(abs "$(dirname "$pwdfile")")/users.tls"
     sed 's#:.*#/valid::::::#' "$pwdfile" > "$dbfile" &&
-    echo "Updated passwd tls db"
+    echo "Updated users TLS file"
 }
 
 md5cmp() {

@@ -6,7 +6,7 @@ source "$(dirname "$0")/helpers/common.sh"
 
 thisdir="$(abs `dirname "$0"`)"
 alias metaval="$thisdir/helpers/metaval"
-pwdfile="$(metaval auth.file)"
+pwdfile="$(metaval auth.dir)/users.passwd"
 
 fail() {
     echo "${cRed}Error$cReset $@" >&2
@@ -17,7 +17,7 @@ info() {
 }
 
 passwd_map "$pwdfile" > /dev/null
-info "Updated passwd map"
+info "Updated users map"
 
 passwd_tlsdb "$pwdfile" > /dev/null
-info "Updated TLS db"
+info "Updated users TLS file"

@@ -2,52 +2,73 @@
 
 set -e
 
-username="$1"
-if [[ -z "$username" ]]; then
-    echo "Usage: email-create <username>" >&2
-    exit 1
-fi
+usage="Usage: email-create <domain> <username>"
 
 source "$(dirname "$0")/helpers/common.sh"
 
 
-thisdir="$(abs `dirname "$0"`)"
-
-alias metaval="$thisdir/helpers/metaval"
-
-pwdfile="$(metaval auth.file)"
-gname="$(metaval auth.group)"
-alg="$(metaval auth.alg)"
-pwopts="$(metaval auth.pwgenopts)"
-hdir="$(metaval auth.emaildir)"
-shell="$(metaval auth.shell)"
-authdir="$(dirname "$pwdfile")"
-pwlen="32"
-
-homedir="$hdir/$username"
+log_err() {
+    echo "${cRed}Error$cReset $@" >&2
+}
 
 fail() {
-    echo "${cRed}Error$cReset $@" >&2
+    log_err "$@"
     exit 1
 }
-info() {
+
+soft_fail() {
+    echo "$@" >&2
+    exit 1
+}
+
+log_info() {
     echo "$cGreen$uCaret$cReset $@"
 }
+
+
+if [[ "${#@}" -ne 2 ]]; then
+    soft_fail "$usage"
+fi
+
+thisdir="$(abs `dirname "$0"`)"
+alias metaval="$thisdir/helpers/metaval"
+
+authdir="$(metaval auth.dir)"
+gid="$(metaval auth.gid)"
+uid="$(metaval auth.uid)"
+alg="$(metaval auth.alg)"
+pwopts="$(metaval auth.pwgenopts)"
+maildir="$(metaval auth.emaildir)"
+pwlen="32"
+
+pwdfile="$authdir/users.passwd"
+
+[[ -e "$pwdfile" ]] || fail "File not found: $pwdfile"
+
+domain="$1"
+username="$2"
+
+domaindir="$maildir/$domain"
+if [[ ! -d "$domaindir" ]]; then
+     log_err "Domain $domain dir does not exist"
+     log_info "$usage"
+     exit 1
+ fi
+
+homedir="$domaindir/$username"
+
+[[ ! -e "$homedir" ]] || fail "Dir $homedir already exists"
 
 if [[ "${#username}" -lt 5 ]] || [[ "${#username}" -gt 64 ]]; then
     fail "Username must be between 5 and 64 chars"
 fi
 
-regex="^[^.-][a-z0-9_.-]+(@[a-z0-9-]+\.[a-z0-9-.]+)?$"
-#regex='^[^.-_][a-z0-9-_.]{3,64}$'
+regex="^[^.-][a-z0-9_.-]{2,63}$"
 if ! grep -qP "$regex" <<< "$username" ; then
-    fail "Username must meet regex $cWhiteLight$regex$cReset"
+    fail "Username must meet regex ${cWhiteLight}${regex}${cReset}"
 fi
 
-ucolor="$cCyan$username$cReset"
-name="$(sed 's/@.*//' <<< "$username")"
-#username="$(sed 's/@/=/g' <<< "$username")"
-ncolor="$cCyan$name$cReset"
+ncolor="${cCyan}${username}${cReset}"
 
 stripped_file() {
     local src="$1"
@@ -59,7 +80,7 @@ stripped_file() {
 chkfile="$authdir/disallowed_usernames"
 if [[ -e "$chkfile" ]]; then
     chkfile_="$(stripped_file "$chkfile")"
-    if grep -iq "^$name\$" "$chkfile_" ; then
+    if grep -iq "^$username\$" "$chkfile_" ; then
         fail "The name $ncolor is not allowed"
     fi
     rm "$chkfile_"
@@ -67,63 +88,32 @@ fi
 chkfile="$authdir/disallowed_usernames_re"
 if [[ -e "$chkfile" ]]; then
     chkfile_="$(stripped_file "$chkfile")"
-    if grep -iqE -f "$chkfile_" <<< "$name" ; then
+    if grep -iqE -f "$chkfile_" <<< "$$username" ; then
         fail "The name $ncolor is not allowed"
     fi
     rm "$chkfile_"
 fi
 
-if [[ ! -e "$pwdfile" ]]; then
-    touch "$pwdfile" || exit 1
+touch "$pwdfile" || exit 1
+
+email="${username}@${domain}"
+ecolor="${cCyan}${email}${cReset}"
+
+if grep -iq "^$email:" "$pwdfile" ; then
+    fail "User $ecolor already exists"
+fi
+if grep -iq "^$email:" /etc/passwd ; then
+    fail "User $ecolor is a system user"
+fi
+if grep -iq "^$email:" /etc/aliases ; then
+    fail "User $ecolor is a system alias"
 fi
 
-gid="$(grep "^$gname:" /etc/group | awk -F: '{print $3}')"
-if [[ -z "$gid" ]]; then
-    gid="515"
-    info "Creating group $cMagenta$gname$cReset with gid $gid"
-    groupadd -g "$gid" "$gname"
-fi
+mkdir -pv "$homedir"
+chown "$uid:$gid" "$homedir"
+echo "$email::$uid:$gid::$homedir/Maildir/:" >> "$pwdfile"
 
-if grep -iq "^$username:" "$pwdfile" ; then
-    fail "User $ucolor already exists"
-fi
-if grep -iq "^$username:" /etc/passwd ; then
-    fail "User $ucolor is a system user"
-fi
-if grep -iq "^$username:" /etc/aliases ; then
-    fail "User $ucolor is a system alias"
-fi
+passwd_map "$pwdfile" > /dev/null
+log_info "Updated passwd map"
 
-if [[ -e "$hdir" ]]; then
-    fail "Directory already exists: $cYellow$hdir$cReset"
-fi
-
-lastid="$(awk -F: '{print $3":"$4}' "$pwdfile" | grep ":$gid\$" | awk -F: '{print $1}' | sort | tail -n 1)"
-if [[ -z "$lastid" ]]; then
-    uid="601"
-else
-    uid="$(expr "$lastid" + 1)"
-fi
-
-password="$(pwgen "$pwopts" "$pwlen" 1)"
-mkdir -pv "$hdir"
-
-if [[ "$pwdfile" = '/etc/passwd' ]]; then
-    info "Creating system user $ucolor with uid $uid"
-    useradd -m -d "$homedir" -g "$gid" -u "$uid" -s "$shell" "$username"
-    chpasswd <<< "$username:$password"
-else
-    info "Creating passwd-file user $ucolor with uid $uid"
-    printf -v input '%s\n%s\n' "$password" "$password"
-    pwdhash="$(doveadm pw -s "$alg" -u "$username" <<< "$input")"
-    line="$username:$pwdhash:$uid:$gid::$homedir:$shell"
-    cp "$pwdfile" "$pwdfile~"
-    echo "$line" >> "$pwdfile"
-    info "Creating home dir $cYellow$homedir$cReset"
-    mkdir -p "$homedir"
-    chown -R "$uid:$gid" "$homedir"
-    passwd_map "$pwdfile" > /dev/null
-    info "Updated passwd map"
-fi
-
-info "Created $ucolor"
+log_info "Created $ecolor"

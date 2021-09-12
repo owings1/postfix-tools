@@ -47,3 +47,9 @@ if is_dkim_enabled; then
     chown opendkim:postfix /var/spool/postfix/opendkim
     chmod 0775 /var/spool/postfix/opendkim
 fi
+
+alias metaval="$(dirname "$0")/../helpers/metaval"
+maildir="$(metaval auth.emaildir)"
+uid="$(metaval auth.uid)"
+gid="$(metaval auth.gid)"
+chown -R "$uid:$gid" "$maildir"

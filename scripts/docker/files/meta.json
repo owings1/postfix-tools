@@ -9,12 +9,11 @@
     "maillog_file"
   ],
   "auth": {
-    "file": "/etc/auth/passwd",
+    "dir": "/etc/auth",
     "alg": "SHA512-CRYPT",
-    "group": "email",
+    "uid": 600,
     "gid": 515,
     "pwgenopts": "-scnyBr='\"\\`|}{/",
-    "emaildir": "/home/email",
-    "shell": "/usr/sbin/nologin"
+    "emaildir": "/var/mail"
   }
 }
