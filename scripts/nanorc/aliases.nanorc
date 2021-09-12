@@ -24,7 +24,7 @@ color brightyellow "[[:space:]=,:]((btree|cdb|dbm|fail|hash|lmdb|sdbm|pcre|stati
 color brightblue "@localhost\b"
 
 # Brackets
-color red "[\[\]]"
+color red "([|])"
 
 # Comments
 color brightblack "(^|[[:space:]])#.*"
