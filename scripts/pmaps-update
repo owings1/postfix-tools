@@ -1,0 +1,7 @@
+#!/bin/bash
+
+source "$(dirname "$0")/helpers/common.sh"
+thisdir="$(abs `dirname "$0"`)"
+confdir="$(postconf -h config_directory)"
+"$thisdir/helpers/postmaps_update" "$confdir"
+    

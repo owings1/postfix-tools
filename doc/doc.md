@@ -60,7 +60,7 @@ sudo postsuper -d ALL deferred
 ```
 # Get sha2 of cert
 
-openssl x509 -in cert.pem -fingerprint -sha256 -noout
+openssl x509 -fingerprint -sha256 -noout -in cert.pem 
 ```
 
 ```
