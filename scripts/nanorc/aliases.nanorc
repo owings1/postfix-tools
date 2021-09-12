@@ -20,13 +20,10 @@ color brightyellow "^[[:space:]]*@[a-z0-9.-]+"
 
 # Services, maps, et al
 # "[[:space:]=,:](VALUES):"
-color brightyellow "[[:space:]=,:]((btree|cdb|dbm|fail|hash|lmdb|sdbm|pcre|static|nis|proxy|unix|local|lmtp|tcp):)+"
-
-# keywords
-color brightblue "@localhost\b"
+color brightblue "[[:space:]=,:]((btree|cdb|dbm|fail|hash|lmdb|sdbm|pcre|static|nis|proxy|unix|local|lmtp|tcp):)+" "@localhost\b"  
 
 # Brackets
-color red "]" "["
+color red "(]|\[)"
 
 # Comments
 color brightblack "(^|[[:space:]])#.*"
