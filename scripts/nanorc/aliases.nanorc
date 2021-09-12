@@ -1,4 +1,4 @@
-syntax "aliases" "\b(aliases|virtual)$"
+syntax "aliases" "\b(aliases|virtual|vmbx|alias_maps)$"
 
 comment "#"
 
