@@ -14,7 +14,9 @@ color yellow "^[[:space:]a-z0-9.-]*@[a-z0-9.-]+"
 # source @
 color brightyellow "^[[:space:]]*[a-z0-9.-]+@"
 # source username
-color brightgreen "^[[:space:]]*[a-z0-9.-]+\b"
+color green "^[[:space:]]*[a-z0-9.-]+\b"
+# catch-all
+color brightyellow "^[[:space:]]*@[a-z0-9.-]+"
 
 # Services, maps, et al
 # "[[:space:]=,:](VALUES):"
@@ -24,7 +26,7 @@ color brightyellow "[[:space:]=,:]((btree|cdb|dbm|fail|hash|lmdb|sdbm|pcre|stati
 color brightblue "@localhost\b"
 
 # Brackets
-color red "([|])"
+color red "]" "["
 
 # Comments
 color brightblack "(^|[[:space:]])#.*"
