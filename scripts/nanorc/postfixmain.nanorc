@@ -45,6 +45,8 @@ color brightmagenta "^(tls_dane_digests)[[:space:]]*=[[:space:]]*((md5|sha1|sha2
 color brightmagenta "^(parent_domain_matches_subdomains)[[:space:]]*=[[:space:]]*((debug_peer_list|fast_flush_domains|mynetworks|permit_mx_backup_networks|postscreen_access_list|qmqpd_authorized_clients|relay_domains|smtpd_access_maps|smtpd_client_event_limit_exceptions|transport_maps)([[:space:],]+|$))+"
 # canonical_classes
 color brightmagenta "^(canonical_classes|masquerade_classes|sender_canonical_classes|recipient_canonical_classes)[[:space:]]*=[[:space:]]*((envelope_sender|envelope_recipient|header_sender|header_recipient)([[:space:],]+|$))+"
+# notify_classes
+color brightmagenta  "^(notify_classes)[[:space:]]*=[[:space:]]*((2bounce|bounce|delay|policy|protocol|resource|software)([[:space:],]+|$))+"
 
 # Single keywords
 #     "^(ATTRS)[[:space:]]*=[[:space:]]*(VALUES)[[:space:]]*$"

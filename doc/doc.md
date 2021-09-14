@@ -1,3 +1,8 @@
+
+```
+# get delivery report
+sendmail -bv <address>
+```
 https://docs.nginx.com/nginx/admin-guide/mail-proxy/mail-proxy/
 
 ```
