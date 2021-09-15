@@ -112,7 +112,7 @@ fi
 
 mkdir -pv "$homedir"
 chown "$uid:$gid" "$homedir"
-echo "$email::$uid:$gid::$homedirrel/Maildir/:" >> "$pwdfile"
+echo "$email:!::::$homedirrel/Maildir/:" >> "$pwdfile"
 
 passwd_map "$pwdfile" > /dev/null
 log_info "Updated passwd map"
