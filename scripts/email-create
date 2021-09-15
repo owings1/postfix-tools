@@ -56,6 +56,7 @@ if [[ ! -d "$domaindir" ]]; then
  fi
 
 homedir="$domaindir/$username"
+homedirrel="$domain/$username"
 
 [[ ! -e "$homedir" ]] || fail "Dir $homedir already exists"
 
@@ -111,7 +112,7 @@ fi
 
 mkdir -pv "$homedir"
 chown "$uid:$gid" "$homedir"
-echo "$email::$uid:$gid::$homedir/Maildir/:" >> "$pwdfile"
+echo "$email::$uid:$gid::$homedirrel/Maildir/:" >> "$pwdfile"
 
 passwd_map "$pwdfile" > /dev/null
 log_info "Updated passwd map"
