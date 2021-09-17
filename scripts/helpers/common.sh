@@ -143,7 +143,7 @@ check_okpassword() {
 passwd_map() {
     local pwdfile="$1"
     local mapfile="$(abs "$(dirname "$pwdfile")")/users.map"
-    awk -F: '{print $1" "$6}' "$pwdfile" > "$mapfile" &&
+    awk -F: '{print $1" "$6}' "$pwdfile" | grep -vP '\s.{0,1}$' > "$mapfile"
     postmap "$mapfile" &&
     echo "Updated users map"
 }
