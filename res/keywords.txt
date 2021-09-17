@@ -63,6 +63,7 @@ check_sender_access
 check_sender_a_access
 check_sender_mx_access
 check_sender_ns_access
+data
 debug_peer_list
 defer
 defer_if_permit

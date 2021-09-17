@@ -46,7 +46,7 @@ color brightmagenta "^(parent_domain_matches_subdomains)[[:space:]]*=[[:space:]]
 # canonical_classes
 color brightmagenta "^(canonical_classes|masquerade_classes|sender_canonical_classes|recipient_canonical_classes)[[:space:]]*=[[:space:]]*((envelope_sender|envelope_recipient|header_sender|header_recipient)([[:space:],]+|$))+"
 # notify_classes
-color brightmagenta  "^(notify_classes)[[:space:]]*=[[:space:]]*((2bounce|bounce|delay|policy|protocol|resource|software)([[:space:],]+|$))+"
+color brightmagenta  "^(notify_classes)[[:space:]]*=[[:space:]]*((2bounce|bounce|data|delay|policy|protocol|resource|software)([[:space:],]+|$))+"
 
 # Single keywords
 #     "^(ATTRS)[[:space:]]*=[[:space:]]*(VALUES)[[:space:]]*$"
