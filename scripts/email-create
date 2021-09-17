@@ -117,4 +117,7 @@ echo "$email:!::::$homedirrel/Maildir/:" >> "$pwdfile"
 passwd_map "$pwdfile" > /dev/null
 log_info "Updated passwd map"
 
+passwd_tlsdb "$pwdfile" > /dev/null
+log_info "Updated users TLS file"
+
 log_info "Created $ecolor"

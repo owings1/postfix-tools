@@ -5,6 +5,7 @@ RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime && \
     apt-get update -qq && apt-get install -qy --no-install-recommends tzdata && \
     apt-get clean
 
+# Postfix
 RUN echo "postmaster: root" > /etc/aliases && \
     echo "localhost" > /etc/mailname && \
     echo postfix postfix/main_mailer_type string "No configuration" && \
@@ -12,14 +13,17 @@ RUN echo "postmaster: root" > /etc/aliases && \
     postfix postfix-pcre rsyslog && \
     apt-get clean
 
+# SASL Utilities
 RUN apt-get update -qq && apt-get install -qy --no-install-recommends \
     libsasl2-modules libpam-pwquality libpam-cracklib pwgen && \
     apt-get clean
 
+# Dovecot
 RUN apt-get update -qq && apt-get install -qy --no-install-recommends \
     dovecot-core dovecot-imapd dovecot-lmtpd && \
     apt-get clean
 
+# OpenDKIM, SPF, postsrsd
 RUN apt-get update -qq && apt-get install -qy --no-install-recommends \
     opendkim opendkim-tools postfix-policyd-spf-python postsrsd && \
     apt-get clean
@@ -32,8 +36,9 @@ RUN apt-get update -qq && apt-get install -qqy --no-install-recommends make curl
     PATH="$PATH:/tmp/pf/go/bin" make && mv postforward /usr/sbin && \
     cd /tmp && rm -r /tmp/pf && apt-get purge -qy make && apt-get clean
 
-RUN apt-get update -qq && apt-get install -qy \
-    psmisc curl telnet less nano ccze bash-completion && \
+# General Utilities
+RUN apt-get update -qq && apt-get install -qqy \
+    psmisc curl telnet less nano ccze bash-completion busybox procmail && \
     apt-get clean
 
 EXPOSE 25 143 587

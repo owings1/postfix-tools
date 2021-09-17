@@ -1,6 +1,7 @@
 # colon preceders
 btree
 cdb
+cidr
 dbm
 fail
 hash

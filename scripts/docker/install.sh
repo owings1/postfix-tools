@@ -10,6 +10,9 @@ files_="$dir_/files"
 scripts_="$(abs "$dir_/..")"
 helpers_="$scripts_/helpers"
 
+# Compatibility symlink
+ln -s /app /usr/local/src/postfix-tools
+
 # Dsable kernel logging for docker
 sed -i 's/^module.*"imklog".*/#\0/' /etc/rsyslog.conf
 # copy rsyslog conf
