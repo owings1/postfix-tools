@@ -68,6 +68,8 @@ color brightred "^(smtp_tls_fingerprint_digest|smtpd_tls_fingerprint_digest|tlsp
 color brightred "^(inet_protocols)[[:space:]]*=[[:space:]]*(all)[[:space:]]*$"
 # address_preference
 color brightred "^(lmtp|smtp)_address_preference[[:space:]]*=[[:space:]]*(any|ipv4|ipv6)[[:space:]]*$"
+# postscreen actions
+color brightred "^(postscreen_denylist_action|postscreen_blacklist_action|postscreen_greet_action|postscreen_dnsbl_action)[[:space:]]*=[[:space:]]*(ignore|enforce|drop)[[:space:]]*$"
 
 # home_mailbox = Maildir/
 color brightred "^home_mailbox[[:space:]]*=[[:space:]]*Maildir/[[:space:]]*$"
