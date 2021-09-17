@@ -2,6 +2,10 @@
 
 shopt -s expand_aliases
 
+if [[ -e /etc/postfix/environment ]]; then
+    . /etc/postfix/environment
+fi
+
 alias doveadm=/usr/bin/doveadm
 alias doveconf=/usr/bin/doveconf
 alias dovecot=/usr/sbin/dovecot
@@ -214,7 +218,7 @@ uCaretr="❮"
 
 color_curl_smtp() {
     local line scope lcolor
-    local cmds='STARTTLS|EHLO|AUTH DIGEST-MD5|AUTH LOGIN|MAIL FROM|RCPT TO|DATA|\*|QUIT'
+    local cmds='STARTTLS|EHLO|AUTH DIGEST-MD5|AUTH PLAIN|AUTH LOGIN|MAIL FROM|RCPT TO|DATA|\*|QUIT'
     while read line; do
         case "${line:0:1}" in
             '<') scope=recv ; lcolor="$cCyan" ;;
@@ -294,6 +298,7 @@ APP_LOGS+=(
     postfix.log
     postfix.err
 )
+
 if [[ -z "$CONFIG_REPO" ]]; then
     CONFIG_REPO="/etc/postfix/repo"
 fi

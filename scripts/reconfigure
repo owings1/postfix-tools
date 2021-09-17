@@ -10,8 +10,7 @@ else
 fi
 
 log() {
-    local fdn msg pfx
-    local priority="$1"
+    local priority="$1" fdn msg pfx
     if [[ "$priority" = err ]]; then
         fdn=2
         pfx="${cRed}ERROR${cReset} "
@@ -21,7 +20,7 @@ log() {
     fi
     while read msg ; do
         write "$pfx$msg" >&$fdn
-        logger -p "$priority" "$msg"
+        logger -p "$priority" -- "$(sed 's/\x1b\[[0-9;]*m//g' <<< "$msg")"
     done
 }
 
@@ -42,21 +41,9 @@ _run() {
     local static="$thisdir/static"
     local builddirq="$(printf '%q' "$builddir")"
 
-    echo "Writing update to $outdir"
-    mkdir -p "$builddir"
-    pushdq "$builddir"
-    # postfix main.cf
-    postconf -n | grep -v '^config_directory =' > main.cf.old
-    postconf -n -c "$srcdir" | grep -v '^config_directory =' > main.cf.new
-    if ! md5cmp master.cf.old master.cf.new ; then
-        "$helpers/postfixmain_diff" main.cf.old main.cf.new .
-    fi
-
     make_file_actions() {
-        local oldfile="$1"
-        local newfile="$2"
-        local dest="$3"
-        local title="$4"
+        local bn="$1" dest="$2"
+        local oldfile="$bn.old" newfile="$bn.new" title="$bn"
         local apfile="$title.apply.sh"
         local rvfile="$title.revert.sh"
         diff "$oldfile" "$newfile" | sed 's/^/# /' >> "$apfile"
@@ -66,11 +53,22 @@ _run() {
         echo "    $oldfile $dest" >> "$rvfile"
     }
 
+    echo "== ${cMagentaLight}Writing update to ${cCyan}$outdir${cReset}"
+    mkdir -p "$builddir"
+    pushdq "$builddir"
+
+    # postfix main.cf
+    postconf -n | grep -v '^config_directory =' > main.cf.old
+    postconf -n -c "$srcdir" | grep -v '^config_directory =' > main.cf.new
+    if ! md5cmp main.cf.old main.cf.new ; then
+        make_file_actions main.cf /etc/postfix/main.cf
+    fi
+
     # postfix master.cf
     postconf -M | cat "$static/mastercfhead.txt" - > master.cf.old
     postconf -M -c "$srcdir" | cat "$static/mastercfhead.txt" - > master.cf.new
     if ! md5cmp master.cf.old master.cf.new ; then
-        make_file_actions master.cf.old master.cf.new /etc/postfix/master.cf postfix_master
+        make_file_actions master.cf /etc/postfix/master.cf
     fi
 
     # postfix files
@@ -81,7 +79,7 @@ _run() {
         if ! md5cmp "$srcdir/dovecot.conf" /etc/dovecot/dovecot.conf ; then
             cp "$srcdir/dovecot.conf" dovecot.conf.new
             cp /etc/dovecot/dovecot.conf dovecot.conf.old
-            make_file_actions dovecot.conf.old dovecot.conf.new /etc/dovecot/dovecot.conf dovecot_dot_conf
+            make_file_actions dovecot.conf /etc/dovecot/dovecot.conf
         fi
         # dovecot/conf.d files
         "$helpers/filesdir_diff" "dovecot_confd_files" "$srcdir/dovecot" /etc/dovecot/conf.d .
@@ -92,8 +90,8 @@ _run() {
         if ! md5cmp "$srcdir/policyd-spf.conf" /etc/postfix-policyd-spf-python/policyd-spf.conf ; then
             cp "$srcdir/policyd-spf.conf" policyd-spf.conf.new
             cp /etc/postfix-policyd-spf-python/policyd-spf.conf policyd-spf.conf.old
-            make_file_actions policyd-spf.conf.old policyd-spf.conf.new \
-                /etc/postfix-policyd-spf-python/policyd-spf.conf policy_spf_conf
+            make_file_actions policyd-spf.conf \
+                /etc/postfix-policyd-spf-python/policyd-spf.conf
         fi
     fi
 
@@ -104,7 +102,7 @@ _run() {
             srsdchange=1
             cp "$srcdir/postsrsd.conf" postsrsd.conf.new
             cp /etc/default/postsrsd postsrsd.conf.old
-            make_file_actions postsrsd.conf.old postsrsd.conf.new /etc/default/postsrsd postsrsd_conf
+            make_file_actions postsrsd.conf /etc/default/postsrsd
         fi
     fi
     popdq
@@ -116,7 +114,7 @@ _run() {
         echo "No configuration changes"
         rm -r "$outdir"
     else
-        echo "Building change script"
+        echo "== ${cMagentaLight}Building change script${cReset}"
         local applyfile="$outdir/apply.sh"
         local revertfile="$outdir/revert.sh"
         local header="$(printf "#!/bin/bash\n# $(date)\n# --------------")"
@@ -125,8 +123,8 @@ _run() {
         local fr
         for fa in "${applyfiles[@]}" ; do
             local fr="$(sed 's/\.apply\.sh$/\.revert\.sh/' <<< "$fa")"
-            local ftitle="$(basename $fa | sed 's/\..*//')"
-            echo " > $ftitle"
+            local ftitle="$(basename $fa | sed -E 's/\.(apply|revert)\.sh//')"
+            echo "[${cCyanLight}${ftitle}${cReset}]"
             echo "# $ftitle" >> "$applyfile"| teeq -a "$applyfile" "$revertfile"
             cat "$fa" >> "$applyfile"
             if [[ -e "$fr" ]]; then
@@ -134,27 +132,37 @@ _run() {
             else
                 echo "# no revert action" >> "$revertfile"
             fi
+            # highlight diff
+            grep '^#' "$fa" | sed -E -e 's/^#\s*//' \
+                -e "s/^>(.*)/+${cGreen}\1${cReset}/" \
+                -e "s/^<(.*)/-${cRed}\1${cReset}/" \
+                -e "s/^---$/${cGrey}---${cReset}/"
+            # add newline
             echo "" | teeq -a "$applyfile" "$revertfile"
+            # cleanup
             rm -f "$fa" "$fr"
         done
-        echo "Running change script"
+        echo "== ${cMagentaLight}Running change script${cReset}"
         bash "$applyfile"
-        echo "Marking as latest"
+        echo "== ${cMagentaLight}Marking as latest${cReset}"
         pushdq "$outdir/.."
-        rm -f latest
-        ln -s "$(basename "$outdir")" latest
+        rm -fv latest
+        ln -sv "$(basename "$outdir")" latest
         popdq
     fi
 
-    echo "Updating postmaps"
+    echo "== ${cMagentaLight}Updating postmaps${cReset}"
     "$helpers/postmaps_update" "$confdir"
 
+    echo "== ${cMagentaLight}Reloading services${cReset}"
     postfix_reload
     dovecot_reload
     if [[ "$srsdchange" = 1 ]]; then
         service_stop postsrsd
         service_start postsrsd
     fi
+
+    echo "== ${cMagentaLight}Done${cReset}"
 }
 
 run
