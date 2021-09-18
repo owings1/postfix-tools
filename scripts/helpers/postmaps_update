@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os.path
 import sys
-from common import bins, exc, exists, pjoin, mapdbfile, meta, modhash, rdjson, wrfile
+from common import bins, clrs, exc, exists, pjoin, mapdbfile, meta, modhash, rdjson, wrfile
 
 class Pmap(object):
 
@@ -34,7 +34,7 @@ def main():
     for pmap in pmaps:
         pmap.read()
         if meta.forcemaps or not pmap.matches():
-            print('[postmap]', pmap.bname)
+            print('[' + clrs.cyanLight + 'postmap' + clrs.reset + ']', clrs.yellow + pmap.bname + clrs.reset)
             exc([bins.postmap, pmap.src])
             pmap.save()
         

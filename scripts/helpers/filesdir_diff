@@ -34,6 +34,7 @@ class Result(object):
 
 def cppatch(fromdir, todir, files):
     return '\n'.join([
+        *[' '.join(('#', '-', pbname(file))) for file in sorted(files)],
         ' '.join(('cd', shlex.quote(fromdir), '&& install -v -p -m 0644 \\')),
         *[qline(pbname(file)) for file in sorted(files)],
         qline(todir, True),

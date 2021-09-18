@@ -92,3 +92,27 @@ def wrfile(file, *lines):
 def wrjson(file, data):
     with open(file, 'w') as writer:
         json.dump(data, writer, indent=2)
+
+class Colors(object):
+    def __init__(self):
+        self.reset='\x1b[0m'
+        self.red='\x1b[0;31m'
+        self.green='\x1b[0;32m'
+        self.blue='\x1b[0;34m'
+        self.magenta='\x1b[0;35m'
+        self.cyan='\x1b[0;36m'
+        self.cyanLight='\x1b[1;36m'
+        self.greyLight='\x1b[0;37m'
+        self.grey='\x1b[1;30m'
+        self.redLight='\x1b[1;31m'
+        self.greenLight='\x1b[1;32m'
+        self.yellow='\x1b[0;33m'
+        self.yellowLight='\x1b[1;33m'
+        self.blueLight='\x1b[1;34m'
+        self.magentaLight='\x1b[1;35m'
+        self.white='\x1b[1;37m'
+        self.whiteLight='\x1b[37;1m'
+        self.dim='\x1b[2m'
+        self.undim='\x1b[22m'
+
+clrs = Colors()
