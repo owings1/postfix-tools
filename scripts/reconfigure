@@ -77,7 +77,8 @@ _run() {
     fi
 
     # postfix files
-    "$helpers/filesdir_diff" "postfix_files" "$srcdir/files" "$confdir" .
+    CONFIG_REPO="$CONFIG_REPO" "$helpers/filesdir_diff" \
+        "postfix_files" "$srcdir/files" "$confdir" .
     if [[ -e "postfix_files.apply.sh" ]]; then
         is_postfix_change=1
     fi
@@ -91,7 +92,8 @@ _run() {
             is_dovecot_change=1
         fi
         # dovecot/conf.d files
-        "$helpers/filesdir_diff" "dovecot_confd_files" "$srcdir/dovecot" /etc/dovecot/conf.d .
+        CONFIG_REPO="$CONFIG_REPO" "$helpers/filesdir_diff" \
+            "dovecot_confd_files" "$srcdir/dovecot" /etc/dovecot/conf.d .
         if [[ -e "dovecot_confd_files.apply.sh" ]]; then
             is_dovecot_change=1
         fi
@@ -165,7 +167,7 @@ _run() {
     fi
 
     echo "== ${cMagentaLight}Updating postmaps${cReset}"
-    "$helpers/postmaps_update" "$confdir"
+    CONFIG_REPO="$CONFIG_REPO" "$helpers/postmaps_update" "$confdir"
 
     local is_reload="$(expr "$is_postfix_change" + "$is_dovecot_change" + "$is_srsd_change")"
     if [[ "$is_reload" -gt 0 ]]; then

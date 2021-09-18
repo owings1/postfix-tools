@@ -6,6 +6,10 @@ if [[ -e /etc/postfix/environment ]]; then
     . /etc/postfix/environment
 fi
 
+if [[ -z "$CONFIG_REPO" ]]; then
+    CONFIG_REPO="/etc/postfix/repo"
+fi
+
 alias doveadm=/usr/bin/doveadm
 alias doveconf=/usr/bin/doveconf
 alias dovecot=/usr/sbin/dovecot
@@ -298,10 +302,6 @@ APP_LOGS+=(
     postfix.log
     postfix.err
 )
-
-if [[ -z "$CONFIG_REPO" ]]; then
-    CONFIG_REPO="/etc/postfix/repo"
-fi
 
 if [[ ! -e "$CONFIG_REPO" ]]; then
     echo "${cYellowLight}WARNING${cReset} $CONFIG_REPO does not exist" >&2
