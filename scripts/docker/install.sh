@@ -65,6 +65,9 @@ popdq
 popdq
 popdq
 
+# postwhite
+cp "$files_/postwhite.conf" /etc
+
 if is_dovecot || is_saslauthd ; then
     "$dir_/sasl.sh"
     if is_dovecot; then

@@ -2,7 +2,8 @@ FROM ubuntu:focal
 
 RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime && \
     DEBIAN_FRONTEND=noninteractive \
-    apt-get update -qq && apt-get install -qy --no-install-recommends tzdata && \
+    apt-get update -qq && apt-get install -qy --no-install-recommends \
+    curl rsyslog tzdata && \
     apt-get clean
 
 # Postfix
@@ -10,7 +11,7 @@ RUN echo "postmaster: root" > /etc/aliases && \
     echo "localhost" > /etc/mailname && \
     echo postfix postfix/main_mailer_type string "No configuration" && \
     apt-get update -qq && apt-get install -qy --no-install-recommends \
-    postfix postfix-pcre rsyslog && \
+    postfix postfix-pcre && \
     apt-get clean
 
 # SASL Utilities
@@ -29,12 +30,19 @@ RUN apt-get update -qq && apt-get install -qy --no-install-recommends \
     apt-get clean
 
 # postforward
-RUN apt-get update -qq && apt-get install -qqy --no-install-recommends make curl ca-certificates && \
+RUN apt-get update -qq && apt-get install -qqy --no-install-recommends \
+    make curl ca-certificates && \
     mkdir /tmp/pf && cd /tmp/pf && \
     curl -sL 'https://golang.org/dl/go1.17.1.linux-amd64.tar.gz' | tar xz && \
     curl -sL 'https://github.com/zoni/postforward/tarball/v1.1.1' | tar xz --strip-components=1 && \
     PATH="$PATH:/tmp/pf/go/bin" make && mv postforward /usr/sbin && \
     cd /tmp && rm -r /tmp/pf && apt-get purge -qy make && apt-get clean
+
+# postwhite
+RUN mkdir -p /usr/local/src/spf-tools && cd /usr/local/src/spf-tools && \
+    curl -sL 'https://github.com/spf-tools/spf-tools/tarball/b0fd4a936' | tar xz --strip-components=1 && \
+    mkdir -p /usr/local/src/postwhite && cd /usr/local/src/postwhite && \
+    curl -sL 'https://github.com/jnorell/postwhite/tarball/patch-1' | tar xz --strip-components=1
 
 # General Utilities
 RUN apt-get update -qq && apt-get install -qqy \
