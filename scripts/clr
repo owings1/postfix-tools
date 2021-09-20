@@ -10,33 +10,39 @@ c_logfile_caret="$cGrey"
 c_logfile="$cBlueLight"
 c_file="$cCyanLight"
 c_url="$cGreen"
-c_ip="$cGreen"
+c_domain="$cBlueLight"
+c_ip="$cMagentaLight"
+c_email="$cMagenta"
+
 c_dim="$cGrey"
 c_undim="$cUndim"
 
 c_good="$cGreenLight"
+c_neut="$cWhiteLight"
 c_warn="$cYellowLight"
+c_bad="$cRedLight"
 c_title="$cMagenta"
 
-kwi_good='(start|started|starting)'
-kwi_warn='(cannot|disable|disabled)'
-
+kwi_good='(active|allowlisted|delivered|\bok\b|open|opened|passed|received-spf: pass|sender spf authorized|\bstart\b|started|starting|whitelisted)'
+kwi_neut='(\bconnect from\b|\bpass new\b|closed|\bdisconnect\b|sighup)'
+kwi_warn='(blacklisted|cannot|denylisted|disable|disabled|domain owner discourages use of this host|lost connection|no auth attempts|pregreet|shutting down|sigterm|signal 15|unsupported protocol|warning)'
+kwi_bad='(access problem|bad command|connection refused|command not found|error:|\[error]|no such file or directory|fatal:|password mismatch|permission denied|softfail|ssl_accept error|unknown user)'
 rst="$cReset"
 
 chr_default='([=])'
 sed -E \
 -e "s/^(==> )(.*)( <==)$/${c_logfile_caret}\1${c_logfile}\2${c_logfile_caret}\3${rst}/" \
 -e "s/^([0-9]{4}-[0-9]{2}-[0-9]{2})(T)([0-9]{2}:[0-9]{2}:[0-9]{2})([0-9.:-]+)/${c_date}\1${c_dim}\2${c_undim}${c_date}\3${c_dim}\4${c_undim}${c_default}/" \
+-e "s/${kwi_neut}/${c_neut}\1${c_default}/gi" \
 -e "s/${kwi_good}/${c_good}\1${c_default}/gi" \
 -e "s/${kwi_warn}/${c_warn}\1${c_default}/gi" \
+-e "s/${kwi_bad}/${c_bad}\1${c_default}/gi" \
+-e "s/\b([a-z0-9._+-]+@[a-z0-9._+-]+)\b/${c_email}\1${c_default}/g" \
 -e "s/( == )(.*)/\1${c_title}\2${c_default}/" \
 -e "s#([=[:space:]])(/[a-zA-Z][a-zA-Z0-9_./-]+)([:])?#\1${c_file}\2${c_default}\3#g" \
 -e "s#(https?://[a-zA-Z0-9.-]+)(/.*)?#${c_url}\1\2${c_default}#g" \
--e "s/(((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))/${c_ip}\1${c_default}/g" \
--e "s/(v?[0-9]+\.[0-9]+\.[0-9.]+)/${c_version}\1${c_default}/" \
+-e "s#(hostname |helo=)([a-z0-9-]+\.[a-z0-9.-]+)#\1${c_domain}\2${c_default}#g" \
+-e "s#([=[:space:]])([a-z0-9.-]+\.(com|org|net|edu))#\1${c_domain}\2${c_default}#g" \
+-e "s#(((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])(/[0-9]{1,2})?)#${c_ip}\1${c_default}#g" \
+-e "s/(v|version )([0-9]+\.[0-9]+\.[0-9.]+)/\1${c_version}\2${c_default}/" \
 $@
-
-#-e "s/^([0-9T:.-]+)/${c_date}\1${c_default}/" \
-
-#c_int="$cWhite"
-#-e "s/(\s[0-9]+)/${c_int}\1${c_default}/" \
