@@ -279,28 +279,28 @@ APP_LOGS+=(auth.log reconfigure.log)
 if is_dovecot; then
     APP_LOGS+=(
         dovecot.dbg
-        dovecot.log
         dovecot.err
+        dovecot.log
     )
 fi
 if is_spf ; then
     APP_LOGS+=(
         policy.dbg
-        policy.log
         policy.err
+        policy.log
     )
 fi
 if is_dkim_enabled ; then
     APP_LOGS+=(
         dkim.dbg
-        dkim.log
         dkim.err
+        dkim.log
     )
 fi
 APP_LOGS+=(
     postfix.dbg
-    postfix.log
     postfix.err
+    postfix.log
 )
 
 if [[ ! -e "$CONFIG_REPO" ]]; then
