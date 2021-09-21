@@ -56,14 +56,15 @@ c_bad="$C_red_b"
 # Convention is rx_<style>[#captures][_flags][_index]
 # The ~ character is used for sed command delimiter
 
-rx_good_gi='(active|allowlisted|delivered|\bok\b|dkim-signature field added|dkim verification successful|message accepted|no signature error'
+rx_good_gi='(active|allowlisted|delivered| ok\b|dkim-signature field added|dkim verification successful|message accepted|no signature error|noqueue: permit'
 rx_good_gi="${rx_good_gi}|pass new|pass old|passed|received-spf: pass|sender spf authorized|whitelisted)"
 
 rx_neut_gi='(\bconnect from\b|closed|\bdisconnect\b|sighup)'
 
 rx_notc_gi='(refreshing the postfix mail system|reloading configuration|shutting down)'
 
-rx_semi_gi='(authentication aborted|\bdisable\b|\bdisabled\b|does not resolve|failed to parse|lost connection|no signing table match|non-smtp command|unsupported protocol)'
+rx_semi_gi='(authentication aborted|\bdisable\b|\bdisabled\b|does not resolve|failed to parse|lost connection'
+rx_semi_gi="${rx_semi_gi}|received-spf: none|no signing table match|non-smtp command|unsupported protocol)"
 
 rx_warn_gi='(domain owner discourages use of this host|no auth attempts|pregreet|warning)'
 
