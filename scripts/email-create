@@ -114,10 +114,7 @@ mkdir -pv "$homedir"
 chown "$uid:$gid" "$homedir"
 echo "$email:!::::$homedirrel/Maildir/:" >> "$pwdfile"
 
-passwd_map "$pwdfile" > /dev/null
-log_info "Updated passwd map"
-
-passwd_tlsdb "$pwdfile" > /dev/null
-log_info "Updated users TLS file"
+passwd_vmbx "$pwdfile"
+passwd_tlsdb "$pwdfile"
 
 log_info "Created $ecolor"

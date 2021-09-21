@@ -64,11 +64,10 @@ _run() {
     if is_dovecot ; then
         local authdir="$(metaval auth.dir)"
         pwdfile="$authdir/users.passwd"
-        mapfile="$authdir/users.map"
         # default auth dir
         mkdir -pv "$authdir"
         touch "$pwdfile"
-        passwd_map "$pwdfile"
+        passwd_vmbx "$pwdfile"
     fi
 }
 

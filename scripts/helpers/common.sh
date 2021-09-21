@@ -148,19 +148,19 @@ check_okpassword() {
     fi
 }
 
-passwd_map() {
+passwd_vmbx() {
     local pwdfile="$1"
-    local mapfile="$(abs "$(dirname "$pwdfile")")/users.map"
-    grep -vP '^\s*#' "$pwdfile" | awk -F: '{print $1" "$6}' | grep -vP '\s.{0,1}$' > "$mapfile" &&
-    postmap "$mapfile" &&
-    echo "Updated users map"
+    local vmbxfile="$(abs "$(dirname "$pwdfile")")/users.vmbx"
+    grep -vP '^\s*#' "$pwdfile" | awk -F: '{print $1" "$6}' | grep -vP '\s.{0,1}$' > "$vmbxfile" &&
+    postmap "$vmbxfile" &&
+    echo "Updated $(basename "$vmbxfile")"
 }
 
 passwd_tlsdb() {
     local pwdfile="$1"
-    local dbfile="$(abs "$(dirname "$pwdfile")")/users.tls"
-    grep -vP '^\s*#' "$pwdfile" | sed 's#:.*#/valid::::::#' > "$dbfile" &&
-    echo "Updated users TLS file"
+    local tlsfile="$(abs "$(dirname "$pwdfile")")/users.tls"
+    grep -vP '^\s*#' "$pwdfile" | sed 's#:.*#/valid::::::#' > "$tlsfile" &&
+    echo "Updated $(basename "$tlsfile")"
 }
 
 md5cmp() {
