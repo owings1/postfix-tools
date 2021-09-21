@@ -3,8 +3,10 @@
 ## :===========================:
 ## : ANSI Code Definitions     :
 ## :===========================:
-C_blue="$(printf '\x1b[0;34m')"
-C_blue_b="$(printf '\x1b[1;34m')"
+#C_blue="$(printf '\x1b[0;34m')"
+#C_blue_b="$(printf '\x1b[1;34m')"
+C_blue="$(printf '\x1B[38;2;0;128;255m')"
+C_blue_b="$(printf '\x1B[38;2;0;128;255m\x1B[1m')"
 C_cyan="$(printf '\x1b[0;36m')"
 C_cyan_b="$(printf '\x1b[1;36m')"
 C_grey_b="$(printf '\x1b[0;37m')"
@@ -42,11 +44,11 @@ c_url="$C_green"
 c_domain="$C_blue_b"
 c_ip="$C_magenta_b"
 c_email="$C_magenta"
-c_title="$C_orange"
+c_title="$C_orange_b"
 c_good="$C_green_b"
-c_neut="$C_pink"
+c_neut="$C_white"
 c_semi="$C_yellow"
-c_notc="$C_white_b"
+c_notc="$C_orange"
 c_warn="$C_yellow_b"
 c_bad="$C_red_b"
 ## ___________________________
@@ -115,5 +117,6 @@ sed -E \
 -e "s~${rx_domain2_g_2}~\1${c_domain}\2${c_default}~g" \
 -e "s~${rx_ip4cidr_g}~${c_ip}\1${c_default}~g" \
 -e "s~${rx_version2}~\1${c_version}\2${c_default}~" \
+-e "s~(status=)(sent)\b~\1${c_good}\2${c_default}~" \
 -e "s~$~${C_reset}~" \
 $@
