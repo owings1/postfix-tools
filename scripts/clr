@@ -15,6 +15,8 @@ C_magenta="$(printf '\x1b[0;35m')"
 C_magenta_b="$(printf '\x1b[1;35m')"
 C_orange="$(printf '\x1B[38;2;255;165;0m')"
 C_orange_b="$(printf '\x1B[38;2;255;165;0m\x1B[1m')"
+C_pink="$(printf '\x1B[38;2;255;192;183m')"
+C_pink_b="$(printf '\x1B[38;2;255;192;183m\x1B[1m')"
 C_red="$(printf '\x1b[0;31m')"
 C_red_b="$(printf '\x1b[1;31m')"
 C_yellow="$(printf '\x1b[0;33m')"
@@ -42,9 +44,9 @@ c_ip="$C_magenta_b"
 c_email="$C_magenta"
 c_title="$C_orange"
 c_good="$C_green_b"
-c_neut="$C_white_b"
+c_neut="$C_pink"
 c_semi="$C_yellow"
-c_notc="$C_orange_b"
+c_notc="$C_white_b"
 c_warn="$C_yellow_b"
 c_bad="$C_red_b"
 ## ___________________________
@@ -56,22 +58,22 @@ c_bad="$C_red_b"
 # Convention is rx_<style>[#captures][_flags][_index]
 # The ~ character is used for sed command delimiter
 
-rx_good_gi='(active|allowlisted|delivered| ok\b|dkim-signature field added|dkim verification successful|message accepted|no signature error|noqueue: permit'
-rx_good_gi="${rx_good_gi}|pass new|pass old|passed|received-spf: pass|sender spf authorized|whitelisted)"
+rx_good_gi='(allowlisted|delivered| ok\b|dkim-signature field added|dkim verification successful|message accepted|no signature error|noqueue: permit'
+rx_good_gi="${rx_good_gi}|pass new|pass old|passed|received-spf: pass|sender spf authorized|Trusted TLS|whitelisted)"
 
-rx_neut_gi='(\bconnect from\b|closed|\bdisconnect\b|sighup)'
+rx_neut_gi='(Anonymous TLS|\bconnect from\b|\bdisconnect from\b|sighup)'
 
 rx_notc_gi='(refreshing the postfix mail system|reloading configuration|shutting down)'
 
 rx_semi_gi='(authentication aborted|\bdisable\b|\bdisabled\b|does not resolve|failed to parse|lost connection'
 rx_semi_gi="${rx_semi_gi}|received-spf: none|no signing table match|non-smtp command|unsupported protocol)"
 
-rx_warn_gi='(domain owner discourages use of this host|no auth attempts|pregreet|warning)'
+rx_warn_gi='(domain owner discourages use of this host|no auth attempts|pregreet|untrusted tls|warning)'
 
 rx_bad_gi='(access problem|auth failed|authentication failed|bad command|bad signature data|blacklisted|client host rejected|command not found|connection refused|denylisted'
 rx_bad_gi="${rx_bad_gi}|error loading|error:|\[error]| fatal\b"
 rx_bad_gi="${rx_bad_gi}|host rejected|internal error|killed with signal 15|login failed|name or service not known|no such file or directory|noqueue: reject"
-rx_bad_gi="${rx_bad_gi}|password mismatch|permission denied|signature verification failed|sigterm|signal 15|softfail|ssl_accept error|unknown user)"
+rx_bad_gi="${rx_bad_gi}|password mismatch|permission denied|\breject\b|signature verification failed|sigterm|signal 15|softfail|ssl_accept error|unknown user)"
 
 rx_date4='^([0-9]{4}-[0-9]{2}-[0-9]{2})(T)([0-9]{2}:[0-9]{2}:[0-9]{2})([0-9.:-]+)'
 

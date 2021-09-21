@@ -24,7 +24,7 @@ else
     alias is_term=false
 fi
 
-if [[ "$FORCE_COLOR" < 1 ]]; then
+if [[ "$FORCE_COLOR" -lt 1 ]]; then
     alias is_color=is_term
 else
     alias is_color=true

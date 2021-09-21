@@ -1,0 +1,30 @@
+#!/bin/bash
+
+source "$(dirname "$0")/helpers/common.sh"
+
+dir_="$(abs "$(dirname "$0")")"
+
+if is_color ; then
+  alias clr="$dir_/clr"
+else
+  alias clr=true
+fi
+
+dbs=($(postconf -xh postscreen_access_list))
+
+qs=($@)
+
+for ip in "${qs[@]}" ; do
+  found=0
+  for db in "${dbs[@]}" ; do
+    fname="$(awk -F: '{print $NF}' <<< "$db")"
+    res="$(postmap -q "$ip" "$db")"
+    if [[ "$?" = 0 ]]; then
+      echo "$ip $res $fname" | clr
+      found=1
+    fi
+  done
+  if [[ "$found" -ne 1 ]]; then
+    echo "$ip Not found" | clr >&2
+  fi
+done
