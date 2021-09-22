@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:hirsute
 
 RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime && \
     DEBIAN_FRONTEND=noninteractive \
