@@ -6,5 +6,7 @@ source "$(dirname "$0")/helpers/common.sh"
 dir_="$(abs "$(dirname "$0")")"
 logfiles=("${APP_LOGS[@]}")
 
+logfiles+=(backup.log)
+
 cd /var/log
 tail -F $@ "${logfiles[@]}" 2>/dev/null | "$dir_/clr"

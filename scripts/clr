@@ -61,29 +61,30 @@ c_low="$C_grey$C_dim"
 # Convention is rx_<style>[#captures][_flags][_index]
 # The ~ character is used for sed command delimiter
 
-rx_good_gi='(allowlisted|delivered| ok\b|dkim-signature field added|dkim verification successful|message accepted|no signature error|noqueue: permit'
-rx_good_gi="${rx_good_gi}|pass new|pass old|passed|received-spf: pass|sender spf authorized|Trusted TLS|whitelisted)"
+rx_good_gi='(allowlisted|auth=1|delivered| ok\b|dkim-signature field added|dkim verification successful|forwarded|message accepted|no signature error|noqueue: permit'
+rx_good_gi="${rx_good_gi}|pass new|pass old|passed|permit_sasl_authenticated|received-spf: pass|rcpt=[1-9][0-9]* |sender spf authorized|status=sent|Trusted TLS|whitelisted)"
 rx_good2_gi='(status=)(sent)'
 
-rx_neut_gi='(Anonymous TLS|\bconnect( from)?\b|\bdisconnect( from)?\b|sighup)'
+rx_neut_gi='(Anonymous TLS|\bconnect (from)?\b|\bdisconnect( from)?\b|sighup)'
 
 rx_notc_gi='(refreshing the postfix mail system|reloading configuration|shutting down)'
 
 rx_semi_gi='(authentication aborted|\bdisable\b|\bdisabled\b|does not resolve|failed to parse|lost connection'
 rx_semi_gi="${rx_semi_gi}|received-spf: none|no signing table match|non-smtp command|unsupported protocol)"
 
-rx_warn_gi='(domain owner discourages use of this host|no auth attempts|pregreet|untrusted tls|warning)'
+rx_warn_gi='(domain owner discourages use of this host|no auth attempts|pregreet|starttls=0/[1-9]+|untrusted tls|warning)'
 
-rx_bad_gi='(access problem|auth failed|authentication failed|bad command|bad signature data|blacklisted|client host rejected|command not found|connection refused|denylisted'
+rx_bad_gi='(access problem|auth failed|auth=0/[1-9]+|authentication failed|bad command|bad signature data|blacklisted|client host rejected|command not found|connection refused|denylisted'
 rx_bad_gi="${rx_bad_gi}|error loading|error:|\[error]| fatal\b"
 rx_bad_gi="${rx_bad_gi}|host rejected|internal error|killed with signal 15|login failed|name or service not known|no such file or directory|noqueue: reject"
-rx_bad_gi="${rx_bad_gi}|password mismatch|permission denied|\breject\b|signature verification failed|sigterm|signal 15|softfail|ssl_accept error|unknown user)"
+rx_bad_gi="${rx_bad_gi}|password mismatch|permission denied|rcpt=0/[1-9]+|\breject\b|relay access denied|signature verification failed|sigterm|signal 15|softfail|ssl_accept error|unknown user)"
 
 rx_low_gi="(\[|\]|\[[0-9]+](:[0-9]*)?)"
 
 rx_date4='^([0-9]{4}-[0-9]{2}-[0-9]{2})(T)([0-9]{2}:[0-9]{2}:[0-9]{2})([0-9.:-]+)'
 
-rx_email_g='\b([a-z0-9._+-]+@[a-z0-9._+-]+)\b'
+rx_email_g='\b([a-zA-Z=0-9._+-]+@[a-z0-9._+-]+)\b'
+rx_email3_g='(from=<|to=<)([a-zA-Z=0-9._+-]+@[a-z0-9._+-]+)(>)'
 
 rx_logfile3='^(==> )(.*)( <==)$'
 
@@ -93,8 +94,8 @@ rx_file2_g='([=[:space:](])(/[a-zA-Z][a-zA-Z0-9_./-]+)([:)])?'
 
 rx_url2_g='(https?://[a-zA-Z0-9.-]+)(/.*)?'
 
-rx_domain2_g_1='(hostname |helo=)([a-z0-9-]+\.[a-z0-9.-]+)'
-rx_domain2_g_2='([=[:space:]])([a-z0-9.-]+\.(com|org|net|edu))'
+rx_domain2_g_1='(domain |hostname |helo=)([a-z0-9-]+\.[a-z0-9.-]+)'
+rx_domain2_g_2='([=[:space:]])([a-z0-9.-]+\.(compute\.internal|com|org|net|edu))'
 
 rx_ip4cidr_g='(((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])(/[0-9]{1,2})?)'
 
@@ -115,12 +116,12 @@ sed -E \
 -e "s~${rx_good2_gi}~\1${c_good}\2${c_default}~gi" \
 -e "s~${rx_warn_gi}~${c_warn}\1${c_default}~gi" \
 -e "s~${rx_bad_gi}~${c_bad}\1${c_default}~gi" \
+-e "s~${rx_domain2_g_1}~\1${c_domain}\2${c_default}~g" \
+-e "s~${rx_domain2_g_2}~\1${c_domain}\2${c_default}~g" \
 -e "s~${rx_email_g}~${c_email}\1${c_default}~g" \
 -e "s~${rx_title2}~\1${c_title}\2${c_default}~" \
 -e "s~${rx_file2_g}~\1${c_file}\2${c_default}\3~g" \
 -e "s~${rx_url2_g}~${c_url}\1\2${c_default}~g" \
--e "s~${rx_domain2_g_1}~\1${c_domain}\2${c_default}~g" \
--e "s~${rx_domain2_g_2}~\1${c_domain}\2${c_default}~g" \
 -e "s~${rx_ip4cidr_g}~${c_ip}\1${c_default}~g" \
 -e "s~${rx_version2}~\1${c_version}\2${c_default}~" \
 -e "s~$~${C_reset}~" \
