@@ -11,13 +11,6 @@ Create an email user account and mail directory.
   -d, --domain DOMAIN   Create user@domain login. Required unless -s is specified.
   -s, --smtp            Create an smtp login only, i.e. no mail directory.
 '
-
-debug() {
-    if [[ ! -z "$DEBUG" ]]; then
-        echo "${cBlueLight}Debug${cReset} $@" >&2
-    fi
-}
-
 log_err() {
     echo "${cRed}Error$cReset $@" >&2
 }

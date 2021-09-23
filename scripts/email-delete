@@ -12,12 +12,6 @@ Delete an email account.
   -m, --mail        Also delete mail dir if exists.
 '
 
-debug() {
-  if [[ ! -z "$DEBUG" ]]; then
-    echo "${cBlueLight}Debug${cReset} $@" >&2
-  fi
-}
-
 log_err() {
   echo "${cRed}Error$cReset $@" >&2
 }

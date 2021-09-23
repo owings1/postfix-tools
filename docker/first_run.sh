@@ -1,6 +1,9 @@
 #!/bin/bash
-source "$(dirname "$0")/../helpers/common.sh"
+
+source "$(dirname "$0")/../scripts/helpers/common.sh"
+
 shopt -s expand_aliases
+
 alias logger="/usr/bin/logger -t first-run"
 
 log() {
@@ -18,26 +21,37 @@ run() {
 }
 
 _run() {
+
     set -e
+
     echo  "First run ..."
+
     local dir_="$(abs "$(dirname "$0")")"
     local files_="$dir_/files"
-    alias metaval="$dir_/../helpers/metaval"
+    alias metaval="$dir_/../scripts/helpers/metaval"
 
+    # Create a default postmaster user, referenced in /etc/aliases, since Dovecot
+    # does not route to root.
     groupadd -g 500 postmaster || true
     useradd -m -g postmaster -s /usr/sbin/nologin postmaster || true
 
-    # source
+    ## Install any missing default config files.
+
     mkdir -pv "$CONFIG_REPO/files"
     pushdq "$CONFIG_REPO"
+
+    # meta.json
     cp -nv "$files_/meta.json" .
+
+    # Dovecot
     if is_dovecot ; then
         cp -nv "$files_/dovecot/dovecot.conf" .
         mkdir -pv dovecot
         cp -nv "$files_/dovecot/"10-*.conf dovecot
     fi
 
-    # the main.cf and master.cf may be updated by install scripts
+    # Postfix config
+    # The main.cf and master.cf may be updated by install scripts
     cp -nv /etc/postfix/main.cf /etc/postfix/master.cf .
     pushdq files
     if [[ ! -e destinations ]]; then
@@ -66,14 +80,16 @@ _run() {
     fi
     popdq
 
-    # Dovecot
+    ## Install & setup auth files
+
+    # Dovecot auth files
     if is_dovecot ; then
         local authdir="$(metaval auth.dir)"
         pwdfile="$authdir/users.passwd"
-        # default auth dir
         mkdir -pv "$authdir"
         touch "$pwdfile"
         passwd_vmbx "$pwdfile"
+        passwd_tlsdb "$pwdfile"
     fi
 }
 

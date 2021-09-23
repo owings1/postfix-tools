@@ -52,32 +52,9 @@ RUN apt-get update -qq && apt-get install -qqy \
 EXPOSE 25 143 587
 ENV CONFIG_REPO /source
 WORKDIR /source
-COPY scripts /app/scripts
+COPY . /app
 VOLUME /source
 VOLUME /var/mail
 VOLUME /etc/auth
-RUN /app/scripts/docker/install.sh
-CMD ["/bin/bash", "/app/scripts/docker/start.sh"]
-
-# https://www.linuxfromscratch.org/blfs/view/svn/server/postfix.html
-
-#src/util/sys_defs.h:
-# define NO_CLOSEFROM
-
-# # build-essential libdb-dev libssl-dev \
-#      libevent-dev \
-#      autoconf automake autopoint autotools-dev bsdextrautils debhelper debugedit default-libmysqlclient-dev dh-autoreconf dh-strip-nondeterminism distro-info-data dwz gettext gettext-base
-#   groff-base html2text icu-devtools intltool-debian libarchive-zip-perl libcdb-dev libcdb1 libdebhelper-perl libdw1 libelf1 libfile-stripnondeterminism-perl libglib2.0-0 libicu-dev libldap2-dev
-#   liblmdb-dev liblmdb0 libmysqlclient-dev libmysqlclient21 libpcre16-3 libpcre3-dev libpcre32-3 libpcrecpp0v5 libpipeline1 libpq-dev libpq5 libsasl2-dev libsigsegv2 libsqlite3-dev
-#   libsub-override-perl libtool libuchardet0 libxml2 libzstd-dev lsb-release m4 man-db mysql-common pkg-config po-debconf zlib1g-dev
-
-# # https://archive.mgm51.com/mirrors/postfix-source/official/postfix-3.6.2.tar.gz
-# 
-# make CCARGS="-DUSE_TLS -I/usr/include/openssl/                     \
-#              -DUSE_SASL_AUTH" \
-#      AUXLIBS="-lssl -lcrypto"                              \
-#      makefiles &&
-# make
-
-# cyrus
-#RUN apt-get update && apt-get install -y --no-install-recommends libsasl2-modules sasl2-bin 
+RUN /app/docker/install.sh
+CMD ["/bin/bash", "/app/docker/start.sh"]

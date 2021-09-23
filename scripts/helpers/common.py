@@ -20,11 +20,9 @@ def rdjson(file):
 def envbool(key):
     return key in os.environ and bool(os.environ[key])
 
-
-
 class AppMeta(object):
     def __init__(self):
-        defaultfile = pjoin(os.path.dirname(pabs(__file__)), '../docker/files/meta.json')
+        defaultfile = pjoin(os.path.dirname(pabs(__file__)), '../../docker/files/meta.json')
         defaults = self.defaults = rdjson(defaultfile)
         if 'CONFIG_REPO' in os.environ:
             self.srcdir = os.environ['CONFIG_REPO']

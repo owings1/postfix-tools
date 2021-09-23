@@ -1,9 +1,10 @@
 #!/bin/bash
+
 set -e
-source "$(dirname "$0")/../../../helpers/common.sh"
+
+source "$(dirname "$0")/../../../scripts/helpers/common.sh"
 
 dir_="$(abs $(dirname "$0"))"
-files_="$dir_/files"
 
 adduser postfix opendkim
 

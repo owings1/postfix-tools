@@ -3,19 +3,21 @@ set -e
 
 mkdir -p "$CONFIG_REPO"
 
-source "$(dirname "$0")/../helpers/common.sh"
+source "$(dirname "$0")/../scripts/helpers/common.sh"
 
 dir_="$(abs $(dirname "$0"))"
 files_="$dir_/files"
-scripts_="$(abs "$dir_/..")"
+scripts_="$(abs "$dir_/../scripts")"
 helpers_="$scripts_/helpers"
+nanorc_="$(abs "$dir_/../nanorc")"
 
 # Compatibility symlink
 ln -s /app /usr/local/src/postfix-tools
 
 # Dsable kernel logging for docker
 sed -i 's/^module.*"imklog".*/#\0/' /etc/rsyslog.conf
-# copy rsyslog conf
+
+# rsyslog
 cp "$files_/syslog/"* /etc/rsyslog.d/
 
 pushdq /etc
@@ -30,42 +32,24 @@ tty3
 tty4
 ttyS1' > /etc/securetty
 
-pushdq "$files_"
-# nano syntax
+# nano syntax files
 mkdir -p /usr/share/nano
-cp "$scripts_/nanorc/"*.nanorc /usr/share/nano
-# bashrc nanorc
-cp misc/bashrc /root/.bashrc
-cp misc/nanorc /root/.nanorc
-# aliases, environment
-cp misc/aliases misc/environment /etc
-newaliases
-popdq
+cp "$nanorc_/"*.nanorc /usr/share/nano
 
+# Install default main.cf and master.cf
 pushdq /etc/postfix
-# install default config
 cp "$files_/"*.cf .
-# must have new line at end of file
+# Must have new line at end of main.cf, or postconf has trouble.
 echo >> main.cf
-# default ssl
-mkdir -p ssl
-pushdq ssl
-mkdir -p certs/snakeoil dh/build
-cp /etc/ssl/private/ssl-cert-snakeoil.key server.key
-pushdq certs
-cp /etc/ssl/certs/ssl-cert-snakeoil.pem snakeoil/server.crt
-cp snakeoil/server.crt snakeoil/ca.crt
-ln -s snakeoil active
-popdq
-# dh params
-pushdq dh
-cp "$files_/dh512.pem" "$files_/dh1024.pem" build
-ln -s build active
-popdq
-popdq
 popdq
 
-# postwhite
+# Misc files
+"$files_/misc/setup.sh"
+
+# Default SSL
+"$files_/ssl/setup.sh"
+
+# Postwhite
 "$files_/postwhite/setup.sh"
 
 # Dovecot

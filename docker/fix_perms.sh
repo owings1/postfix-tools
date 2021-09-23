@@ -2,7 +2,8 @@
 
 set -e
 
-source "$(dirname "$0")/../helpers/common.sh"
+source "$(dirname "$0")/../scripts/helpers/common.sh"
+alias metaval="$(dirname "$0")/../scripts/helpers/metaval"
 
 chown root:syslog /var/log
 chmod 0775 /var/log
@@ -48,7 +49,6 @@ if is_dkim_enabled; then
     chmod 0775 /var/spool/postfix/opendkim
 fi
 
-alias metaval="$(dirname "$0")/../helpers/metaval"
 maildir="$(metaval auth.emaildir)"
 uid="$(metaval auth.uid)"
 gid="$(metaval auth.gid)"

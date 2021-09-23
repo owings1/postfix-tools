@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source "$(dirname "$0")/../helpers/common.sh" || exit 1
+source "$(dirname "$0")/../scripts/helpers/common.sh" || exit 1
 
 alias log="/usr/bin/logger -t coordinator"
 
