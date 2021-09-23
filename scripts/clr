@@ -74,7 +74,8 @@ rx_semi_gi="${rx_semi_gi}|received-spf: none|no signing table match|non-smtp com
 
 rx_warn_gi='(domain owner discourages use of this host|no auth attempts|pregreet|starttls=0/[1-9]+|untrusted tls|warning)'
 
-rx_bad_gi='(access problem|auth failed|auth=0/[1-9]+|authentication failed|bad command|bad signature data|blacklisted|client host rejected|command not found|connection refused|denylisted'
+rx_bad_gi='(access problem|auth failed|auth=0/[1-9]+|authentication failed|bad command|bad signature data|blacklisted'
+rx_bad_gi="${rx_bad_gi}|client host rejected|client refused|command not found|connection refused|denylisted"
 rx_bad_gi="${rx_bad_gi}|error loading|error:|\[error]| fatal\b"
 rx_bad_gi="${rx_bad_gi}|host rejected|internal error|killed with signal 15|login failed|name or service not known|no such file or directory|noqueue: reject"
 rx_bad_gi="${rx_bad_gi}|password mismatch|permission denied|rcpt=0/[1-9]+|\breject\b|relay access denied|signature verification failed|sigterm|signal 15|softfail|ssl_accept error|unknown user)"
