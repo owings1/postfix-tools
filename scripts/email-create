@@ -1,11 +1,16 @@
 #!/bin/bash
 
-set -e
-
-usage="Usage: email-create <domain> <username>"
-
 source "$(dirname "$0")/helpers/common.sh"
 
+set -e
+
+usage="Usage: email-create [-s] [-d domain] user"
+
+debug() {
+    if [[ ! -z "$DEBUG" ]]; then
+        echo "${cBlueLight}Debug${cReset} $@" >&2
+    fi
+}
 
 log_err() {
     echo "${cRed}Error$cReset $@" >&2
@@ -25,96 +30,158 @@ log_info() {
     echo "$cGreen$uCaret$cReset $@"
 }
 
-
-if [[ "${#@}" -ne 2 ]]; then
-    soft_fail "$usage"
-fi
-
-thisdir="$(abs `dirname "$0"`)"
-alias metaval="$thisdir/helpers/metaval"
-
-authdir="$(metaval auth.dir)"
-gid="$(metaval auth.gid)"
-uid="$(metaval auth.uid)"
-alg="$(metaval auth.alg)"
-pwopts="$(metaval auth.pwgenopts)"
-maildir="$(metaval auth.emaildir)"
-pwlen="32"
-
-pwdfile="$authdir/users.passwd"
-
-[[ -e "$pwdfile" ]] || fail "File not found: $pwdfile"
-
-domain="$1"
-username="$2"
-
-domaindir="$maildir/$domain"
-if [[ ! -d "$domaindir" ]]; then
-     log_err "Domain $domain dir does not exist"
-     log_info "$usage"
-     exit 1
- fi
-
-homedir="$domaindir/$username"
-homedirrel="$domain/$username"
-
-[[ ! -e "$homedir" ]] || fail "Dir $homedir already exists"
-
-if [[ "${#username}" -lt 5 ]] || [[ "${#username}" -gt 64 ]]; then
-    fail "Username must be between 5 and 64 chars"
-fi
-
-regex="^[^.-][a-z0-9_.-]{2,63}$"
-if ! grep -qP "$regex" <<< "$username" ; then
-    fail "Username must meet regex ${cWhiteLight}${regex}${cReset}"
-fi
-
-ncolor="${cCyan}${username}${cReset}"
-
 stripped_file() {
+    # make a new file stripped of comments
     local src="$1"
     local file="$(mktemp)"
     grep -vP '^\s*#' "$src" > "$file"
     echo "$file"
 }
 
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        -s|--smtp) smtponly=1;;
+        -d|--domain) domain="$2"; shift;;
+        -*) fail "Unknown option: $1";;
+        *) true;
+            if [[ -z "$user" ]]; then
+                user="$1"
+            else
+                log_err "Too many arguments"
+                soft_fail "$usage"
+            fi;;
+    esac
+    shift
+done
+
+if [[ -z "$smtponly" ]] && [[ -z "$domain" ]]; then
+    log_err "Must specify --domain or --smtp"
+    soft_fail "$usage"
+fi
+
+if [[ -z "$user" ]]; then
+    log_err "Must specify user"
+    soft_fail "$usage"
+fi
+
+if [[ -z "$domain" ]]; then
+    login="$user"
+else
+    login="$user@$domain"
+fi
+
+dir_="$(abs `dirname "$0"`)"
+alias metaval="$dir_/helpers/metaval"
+authdir="$(metaval auth.dir)"
+pwdfile="$authdir/users.passwd"
+
+debug "smtponly=$smtponly"
+debug "user=$user"
+debug "domain=$domain"
+debug "login=$login"
+debug "authdir=$authdir"
+debug "pwdfile=$pwdfile"
+
+# Ensure users.passwd exists
+[[ -e "$pwdfile" ]] || fail "File not found: $pwdfile"
+touch "$pwdfile" || exit 1
+
+## =================
+##  Username checks
+## =================
+
+ncolor="${cCyan}${user}${cReset}"
+ecolor="${cCyan}${login}${cReset}"
+
+if [[ "${#user}" -lt 5 ]] || [[ "${#user}" -gt 64 ]]; then
+    fail "Username must be between 5 and 64 chars"
+fi
+
+regex="^[^.-][a-z0-9_.-]{2,63}$"
+debug "regex=$regex"
+if ! grep -qE "$regex" <<< "$user" ; then
+    fail "Username must meet regex ${cWhiteLight}${regex}${cReset}"
+fi
+debug "regex OK"
+
+# Check disallowed usernames files
 chkfile="$authdir/disallowed_usernames"
 if [[ -e "$chkfile" ]]; then
+    debug "checking $chkfile"
     chkfile_="$(stripped_file "$chkfile")"
-    if grep -iq "^$username\$" "$chkfile_" ; then
-        fail "The name $ncolor is not allowed"
+    if grep -iq "^$user\$" "$chkfile_" ; then
+        fail "The username $ncolor is not allowed"
     fi
     rm "$chkfile_"
 fi
 chkfile="$authdir/disallowed_usernames_re"
 if [[ -e "$chkfile" ]]; then
+    debug "checking $chkfile"
     chkfile_="$(stripped_file "$chkfile")"
-    if grep -iqE -f "$chkfile_" <<< "$$username" ; then
+    if grep -iqE -f "$chkfile_" <<< "$user" ; then
         fail "The name $ncolor is not allowed"
     fi
     rm "$chkfile_"
 fi
 
-touch "$pwdfile" || exit 1
-
-email="${username}@${domain}"
-ecolor="${cCyan}${email}${cReset}"
-
-if grep -iq "^$email:" "$pwdfile" ; then
-    fail "User $ecolor already exists"
+# Check if login already exists exists
+debug "checking for existing user"
+if grep -iq "^$login:" "$pwdfile" ; then
+    fail "Login $ecolor already exists"
 fi
-if grep -iq "^$email:" /etc/passwd ; then
-    fail "User $ecolor is a system user"
+debug "checking /etc/passwd"
+# Check /etc/passwd for existing user
+if grep -iq "^$login:" /etc/passwd ; then
+    fail "Login $ecolor is a system user"
 fi
-if grep -iq "^$email:" /etc/aliases ; then
-    fail "User $ecolor is a system alias"
+# Check /etc/aliases
+# TODO: check postconf local_recipient_maps
+debug "checking /etc/aliases"
+if grep -iq "^$login:" /etc/aliases ; then
+    fail "Login $ecolor is a system alias"
 fi
 
-mkdir -pv "$homedir"
-chown "$uid:$gid" "$homedir"
-echo "$email:!::::$homedirrel/Maildir/:" >> "$pwdfile"
+## =======================
+##  Create Home Directory
+## =======================
 
+if [[ -z "$smtponly" ]]; then
+
+    gid="$(metaval auth.gid)"
+    uid="$(metaval auth.uid)"
+    alg="$(metaval auth.alg)"
+    maildir="$(metaval auth.emaildir)"
+
+    domaindir="$maildir/$domain"
+    debug "domaindir=$domaindir"
+
+    if [[ ! -d "$domaindir" ]]; then
+        log_err "Domain $domain dir does not exist"
+        soft_fail "$usage"
+    fi
+
+    homedir="$domaindir/$user"
+    homedirrel="$domain/$user"
+    mboxval="$homedirrel/Maildir/"
+
+    debug "homedir=$homedir"
+    debug "uid=$uid"
+    debug "gid=$gid"
+
+    [[ ! -e "$homedir" ]] || fail "Dir $homedir already exists"
+
+    mkdir -p "$homedir"
+    chown "$uid:$gid" "$homedir"
+    log_info "Created $homedir"
+else
+    mboxval="x"
+fi
+
+# Create entry in users.passwd
+echo "$login:!::::$mboxval:" >> "$pwdfile"
+log_info "Created $ecolor"
+
+# Update passwd maps
 passwd_vmbx "$pwdfile"
 passwd_tlsdb "$pwdfile"
 
-log_info "Created $ecolor"

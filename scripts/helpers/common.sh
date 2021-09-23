@@ -151,7 +151,10 @@ check_okpassword() {
 passwd_vmbx() {
     local pwdfile="$1"
     local vmbxfile="$(abs "$(dirname "$pwdfile")")/users.vmbx"
-    grep -vP '^\s*#' "$pwdfile" | awk -F: '{print $1" "$6}' | grep -vP '\s.{0,1}$' > "$vmbxfile" &&
+    grep -vE '^\s*#' "$pwdfile" \
+        | awk -F: '{print $1" "$6}' \
+        | { grep -vE '\s.{0,1}$' || true ; } \
+        > "$vmbxfile" &&
     postmap "$vmbxfile" &&
     echo "Updated $(basename "$vmbxfile")"
 }
@@ -159,7 +162,9 @@ passwd_vmbx() {
 passwd_tlsdb() {
     local pwdfile="$1"
     local tlsfile="$(abs "$(dirname "$pwdfile")")/users.tls"
-    grep -vP '^\s*#' "$pwdfile" | sed 's#:.*#/valid::::::#' > "$tlsfile" &&
+    grep -vE '^\s*#' "$pwdfile" \
+        | sed 's#:.*#/valid::::::#' \
+        > "$tlsfile" &&
     echo "Updated $(basename "$tlsfile")"
 }
 
