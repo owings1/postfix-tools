@@ -1,0 +1,137 @@
+#!/bin/bash
+
+source "$(dirname "$0")/helpers/common.sh"
+
+set -e
+
+usage="Usage: email-delete [-f] [-m] LOGIN"
+help='
+Delete an email account.
+
+  -f, --force       Do not prompt for confirmation.
+  -m, --mail        Also delete mail dir if exists.
+'
+
+debug() {
+  if [[ ! -z "$DEBUG" ]]; then
+    echo "${cBlueLight}Debug${cReset} $@" >&2
+  fi
+}
+
+log_err() {
+  echo "${cRed}Error$cReset $@" >&2
+}
+
+warn() {
+  echo "${cYellowLight}Warn${cReset} $@" >&2
+}
+
+fail() {
+  log_err "$@"
+  exit 1
+}
+
+soft_fail() {
+  echo "$@" >&2
+  exit 1
+}
+
+log_info() {
+  echo "$cMagentaLight$uCaret$cReset $@"
+}
+
+confirm() {
+  if [[ ! -z "$force" ]]; then
+    return 0
+  fi
+  local msg="$1"
+  if [[ -z "$msg" ]]; then
+    msg="Are you sure?"
+  fi
+  msg="$msg [y/N] "
+  local resp
+  echo -n "$msg"
+  read -r resp
+  if [[ "${resp,,}" = 'y' ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    -h|--help) printf '%s\n%s' "$usage" "$help"; exit 0;;
+    -f|--force) force=1;;
+    -m|--mail) deletemail=1;;
+    -*) fail "Unknown option: $1";;
+    *) true;
+      if [[ -z "$login" ]]; then
+        login="$1"
+      else
+        log_err "Too many arguments"
+        soft_fail "$usage"
+      fi;;
+  esac
+  shift
+done
+
+if [[ -z "$login" ]]; then
+  log_err "Must specify login"
+  soft_fail "$usage"
+fi
+
+dir_="$(abs `dirname "$0"`)"
+alias metaval="$dir_/helpers/metaval"
+authdir="$(metaval auth.dir)"
+pwdfile="$authdir/users.passwd"
+
+debug "login=$login"
+debug "authdir=$authdir"
+debug "pwdfile=$pwdfile"
+debug "deletemail=$deletemail"
+
+ecolor="${cMagentaLight}${login}${cReset}"
+
+if ! grep -iq "^$login:" "$pwdfile" ; then
+  fail "Login $ecolor does not exist"
+fi
+
+if [[ ! -z "$deletemail" ]]; then
+  mboxval="$(grep -i "^$login:" "$pwdfile" | awk -F: '{print $6}')"
+  if [[ "${mboxval}" =~ 'Maildir/' ]]; then
+    maildir="$(metaval auth.emaildir)"
+    homedir="$(dirname "$maildir/$mboxval")"
+    hdircolor="${cCyanLight}${homedir}${cReset}"
+    debug "homedir=$homedir"
+  else
+    warn "Not a valid mail dir: ${mboxval}"
+  fi
+fi
+
+if ! confirm "Are you sure you want to delete $ecolor?"; then
+  debug "exiting: ${confirm,,}"
+  exit 0
+fi
+
+ftmp="$(mktemp)"
+debug "ftmp=$ftmp"
+{ grep -vi "^$login:" "$pwdfile" || true ; } > "$ftmp"
+mv "$ftmp" "$pwdfile"
+log_info "Deleted user $ecolor"
+
+# Update passwd maps
+passwd_vmbx "$pwdfile"
+passwd_tlsdb "$pwdfile"
+
+if [[ ! -z "$deletemail" ]] && [[ ! -z "$homedir" ]]; then
+  if [[ -e "$homedir" ]]; then
+    if confirm "Remove $hdircolor?"; then
+      tmp="$(mktemp -d)"
+      mv "$homedir" "$tmp"
+      log_info "Sent mail dir to $tmp"
+    fi
+  else
+    log_info "Dir $hdircolor does not exist"
+  fi
+fi

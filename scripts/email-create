@@ -4,7 +4,13 @@ source "$(dirname "$0")/helpers/common.sh"
 
 set -e
 
-usage="Usage: email-create [-s] [-d domain] user"
+usage="Usage: email-create [-s] [-d DOMAIN] USER"
+help='
+Create an email user account and mail directory.
+
+  -d, --domain DOMAIN   Create user@domain login. Required unless -s is specified.
+  -s, --smtp            Create an smtp login only, i.e. no mail directory.
+'
 
 debug() {
     if [[ ! -z "$DEBUG" ]]; then
@@ -40,6 +46,7 @@ stripped_file() {
 
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
+        -h|--help) printf '%s\n%s' "$usage" "$help"; exit 0;;
         -s|--smtp) smtponly=1;;
         -d|--domain) domain="$2"; shift;;
         -*) fail "Unknown option: $1";;
@@ -90,8 +97,8 @@ touch "$pwdfile" || exit 1
 ##  Username checks
 ## =================
 
-ncolor="${cCyan}${user}${cReset}"
-ecolor="${cCyan}${login}${cReset}"
+ncolor="${cMagentaLight}${user}${cReset}"
+ecolor="${cMagentaLight}${login}${cReset}"
 
 if [[ "${#user}" -lt 5 ]] || [[ "${#user}" -gt 64 ]]; then
     fail "Username must be between 5 and 64 chars"
@@ -163,16 +170,17 @@ if [[ -z "$smtponly" ]]; then
     homedir="$domaindir/$user"
     homedirrel="$domain/$user"
     mboxval="$homedirrel/Maildir/"
+    hdircolor="${cCyanLight}${homedir}${cReset}"
 
     debug "homedir=$homedir"
     debug "uid=$uid"
     debug "gid=$gid"
 
-    [[ ! -e "$homedir" ]] || fail "Dir $homedir already exists"
+    [[ ! -e "$homedir" ]] || fail "Dir $hdircolor already exists"
 
     mkdir -p "$homedir"
     chown "$uid:$gid" "$homedir"
-    log_info "Created $homedir"
+    log_info "Created $hdircolor"
 else
     mboxval="x"
 fi
