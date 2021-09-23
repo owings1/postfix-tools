@@ -36,31 +36,37 @@ _run() {
         mkdir -pv dovecot
         cp -nv "$files_/dovecot/"10-*.conf dovecot
     fi
+
     # the main.cf and master.cf may be updated by install scripts
     cp -nv /etc/postfix/main.cf /etc/postfix/master.cf .
     pushdq files
-    cp -nv "$files_/destinations" .
+    if [[ ! -e destinations ]]; then
+        echo 'localhost' > destinations
+    fi
     for file in client_checks sender_checks virtual virtual_alias_domains ; do
         if [[ ! -e "$file" ]]; then
             touch "$file"
         fi
     done
     popdq
+
     # SPF
     if is_spf ; then
-        cp -nv "$files_/dkim/policyd-spf.conf" .
+        cp -nv "$files_/spf/policyd-spf.conf" .
     fi
-    # srsd
+
+    # SRSD
     if is_srsd ; then
         if [[ ! -e /etc/postsrsd.secret ]]; then
             pwgen -s 32 1 > /etc/postsrsd.secret
             chmod 0600 /etc/postsrsd.secret
         fi
-        cp -nv "$files_/dkim/postsrsd" postsrsd.conf
+        cp -nv "$files_/srsd/postsrsd" postsrsd.conf
         cp -nv /etc/postfix/local_dsn_filter files
     fi
     popdq
 
+    # Dovecot
     if is_dovecot ; then
         local authdir="$(metaval auth.dir)"
         pwdfile="$authdir/users.passwd"

@@ -18,17 +18,19 @@ alias postmap=/usr/sbin/postmap
 alias postconf=/usr/sbin/postconf
 alias service=/usr/sbin/service
 
-if [[ -t 1 ]]; then
-    alias is_term=true
-else
-    alias is_term=false
-fi
+is_term() {
+    [[ -t 1 ]]
+}
 
-if [[ "$FORCE_COLOR" -lt 1 ]]; then
-    alias is_color=is_term
-else
-    alias is_color=true
-fi
+is_color() {
+    [[ "$FORCE_COLOR" -gt 1 ]] || is_term
+}
+
+debug() {
+    if [[ ! -z "$DEBUG" ]]; then
+        echo "${cBlueLight}Debug${cReset} $@" >&2
+    fi
+}
 
 abs() {
     echo `cd "$1" && pwd`
@@ -40,10 +42,6 @@ date_path() {
 
 is_dovecot() {
     command -v /usr/sbin/dovecot > /dev/null
-}
-
-is_saslauthd() {
-    command -v /usr/sbin/saslauthd > /dev/null
 }
 
 is_spf() {
@@ -197,7 +195,7 @@ popdq() {
 }
 
 teeq() {
-    tee $@ > /dev/null
+    tee "$@" > /dev/null
 }
 
 if is_color; then
@@ -271,10 +269,6 @@ color_curl_smtp_status() {
     fi
     return "$status"
 }
-
-if is_saslauthd; then
-    SASL_SPOOL="/var/spool/postfix/var/run/saslauthd"
-fi
 
 declare -a APP_LOGS
 if is_docker ; then

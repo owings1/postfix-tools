@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-source "$(dirname "$0")/../helpers/common.sh"
+source "$(dirname "$0")/../../../helpers/common.sh"
 
 dir_="$(abs $(dirname "$0"))"
 files_="$dir_/files"
@@ -8,10 +8,10 @@ files_="$dir_/files"
 adduser postfix opendkim
 
 # patch init scripts
-cp "$files_/dkim/init" /etc/init.d/opendkim
-cp "$files_/dkim/default" /etc/default/opendkim
+cp "$dir_/init" /etc/init.d/opendkim
+cp "$dir_/default" /etc/default/opendkim
 
-cp "$files_/dkim/opendkim.conf" /etc/
+cp "$dir_/opendkim.conf" /etc/
 chmod 0644 /etc/opendkim.conf
 
 mkdir -p /etc/opendkim/keys

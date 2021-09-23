@@ -54,10 +54,4 @@ smtpd_recipient_restrictions = ... permit_sasl_authenticated
 smtpd_tls_auth_only = yes
 ```
 
-/etc/pam.d/common-password:
-
-```
-password        requisite          pam_pwquality.so retry=3 minlen=8 difok=3 lcredit=-1 ucredit=-1 dcredit=-1 ocredit=-1 reject_username enforce_for_root
-```
-
 

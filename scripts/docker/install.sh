@@ -44,7 +44,7 @@ popdq
 
 pushdq /etc/postfix
 # install default config
-cp "$files_/"*.cf "$files_/destinations" .
+cp "$files_/"*.cf .
 # must have new line at end of file
 echo >> main.cf
 # default ssl
@@ -66,20 +66,24 @@ popdq
 popdq
 
 # postwhite
-cp "$files_/postwhite.conf" /etc
+"$files_/postwhite/setup.sh"
 
-if is_dovecot || is_saslauthd ; then
-    "$dir_/sasl.sh"
-    if is_dovecot; then
-        "$dir_/dovecot.sh"
-    elif is_saslauthd; then
-        "$dir_/saslauthd.sh"
-    fi
+# Dovecot
+if is_dovecot ; then
+    "$files_/dovecot/setup.sh"
 fi
 
+# SPF
 if is_spf ; then
-    "$dir_/spf.sh"
+    "$files_/spf/setup.sh"
 fi
+
+# SRSD
+if is_srsd ; then
+    "$files_/srsd/setup.sh"
+fi
+
+# DKIM
 if is_dkim; then
-    "$dir_/dkim.sh"
+    "$files_/dkim/setup.sh"
 fi
