@@ -18,7 +18,7 @@ alias postmap=/usr/sbin/postmap
 alias postconf=/usr/sbin/postconf
 alias service=/usr/sbin/service
 
-if [[ -t 0 ]]; then
+if [[ -t 1 ]]; then
     alias is_term=true
 else
     alias is_term=false

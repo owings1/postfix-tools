@@ -7,10 +7,10 @@ dir_="$(abs "$(dirname "$0")")"
 if is_color ; then
   alias clr="$dir_/clr"
 else
-  alias clr=true
+  alias clr=cat
 fi
 
-dbs=($(postconf -xh postscreen_access_list))
+dbs=($(postconf -xh postscreen_access_list | grep '^cidr:'))
 
 qs=($@)
 
