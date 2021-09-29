@@ -3,8 +3,13 @@ syntax "access" "_checks$" "\.access"
 
 comment "#"
 
-# action keyworkds
-icolor yellow "\b(defer|defer_if_reject|defer_if_permit|bcc|discard|dunno|filter|hold|prepend|redirect|info|warn)\b"
+# Action keywords
+# ================
+# color the comment after the keyword first
+icolor cyan "\b(defer|defer_if_reject|defer_if_permit|bcc|discard|dunno|filter|hold|prepend|redirect|info|warn|reject|permit)\b.*"
+# color the keyword
+icolor yellow "\b(defer|defer_if_reject|defer_if_permit|bcc|discard|dunno|filter|hold|prepend|redirect|info|warn|reject|permit)\b"
+# override some keywords
 icolor red "\b(reject)\b"
 icolor green "\b(permit)\b"
 
@@ -22,8 +27,17 @@ color magenta "^[[:space:]]*((((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(
 color brightmagenta "/[0-9]{1,3}"
 # reset
 color magenta "/"
+
 # Domain names
-color magenta "^[[:space:]]*(([a-z0-9]+\.[a-z0-9]+)+)"
+color magenta "^[[:space:]]*\.?(([a-z0-9]+\.[a-z0-9]+)+)"
+
+# Email addresses
+# source domain
+color magenta "^[[:space:]a-z0-9.-]*@[a-z0-9.-]+"
+# source username
+color brightblue "^[[:space:]]*[a-zA-Z0-9._-]+@"
+color brightmagenta "@"
+
 # Subdomain match
 color brightmagenta "^[[:space:]]*\."
 
