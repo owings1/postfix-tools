@@ -20,14 +20,11 @@ for ip in "${qs[@]}" ; do
     fname="$(awk -F: '{print $NF}' <<< "$db")"
     res="$(postmap -q "$ip" "$db")"
     if [[ "$?" = 0 ]]; then
-      if [[ "${res,,}" =~ "not found" ]]; then
-        res='NotFound'
-      fi
       echo "$ip $res $fname" | clr
       found=1
     fi
   done
   if [[ "$found" -ne 1 ]]; then
-    echo "$ip Not found" | clr >&2
+    echo "$ip NotFound" | clr >&2
   fi
 done
