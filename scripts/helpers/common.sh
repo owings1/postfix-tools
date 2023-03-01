@@ -177,7 +177,7 @@ port_number() {
     if [[ "$name" =~ ^[0-9]+$ ]]; then
         echo "$name"
     else
-        getent services "$name" | awk '{print $2}' | sed s-/.*--
+        getent services "$name" | awk '{print $2}' | sed 's-/.*--'
     fi
 }
 
@@ -306,5 +306,4 @@ APP_LOGS+=(
 
 if [[ ! -e "$CONFIG_REPO" ]]; then
     echo "${cYellowLight}WARNING${cReset} $CONFIG_REPO does not exist" >&2
-    return 1
 fi
