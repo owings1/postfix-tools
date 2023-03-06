@@ -62,7 +62,7 @@ c_low="$C_grey$C_dim"
 # The ~ character is used for sed command delimiter
 
 rx_good_gi='(allowlisted|auth=1|delivered| ok\b|dkim-signature field added|dkim verification successful|forwarded|message accepted|no signature error|noqueue: permit'
-rx_good_gi="${rx_good_gi}|pass new|pass old|passed|permit_sasl_authenticated|received-spf: pass|rcpt=[1-9][0-9]* |sender spf authorized|status=sent|Trusted TLS|whitelisted)"
+rx_good_gi="${rx_good_gi}|pass new|pass old|passed|permit_sasl_authenticated|received-spf: pass|[^n]rcpt=[1-9][0-9]* |sender spf authorized|status=sent|Trusted TLS|whitelisted)"
 rx_good2_gi='(status=)(sent)'
 
 rx_neut_gi='(Anonymous TLS|\bconnect (from)?\b|\bdisconnect( from)?\b|sighup)'
@@ -78,7 +78,7 @@ rx_bad_gi='(access problem|auth failed|auth=0/[1-9]+|authentication failed|bad c
 rx_bad_gi="${rx_bad_gi}|client host rejected|client refused|command not found|connection refused|denylisted"
 rx_bad_gi="${rx_bad_gi}|error loading|error:|\[error]| fatal\b"
 rx_bad_gi="${rx_bad_gi}|host rejected|internal error|killed with signal 15|login failed|name or service not known|no such file or directory|noqueue: reject"
-rx_bad_gi="${rx_bad_gi}|password mismatch|permission denied|rcpt=0/[1-9]+|\breject\b|relay access denied|signature verification failed|sigterm|signal 15|softfail|ssl_accept error|unknown user)"
+rx_bad_gi="${rx_bad_gi}|password mismatch|permission denied|rcpt=0/[1-9]+|nrcpt=[1-9][0-9]*|\breject\b|relay access denied|signature verification failed|sigterm|signal 15|softfail|ssl_accept error|unknown user)"
 
 rx_low_gi="(\[|\]|\[[0-9]+](:[0-9]*)?)"
 
