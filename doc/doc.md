@@ -80,10 +80,19 @@ DOMAIN=<my.domain>
 # Gen key
 cd /etc/opendkim
 opendkim-genkey -b 2048 -h rsa-sha256 -r -s "$ID" -d "$DOMAIN" -v
-mv "$ID.private" "keys/$DOMAIN.private"
-mv "$ID.txt" "keys/$DOMAIN.txt"
+mv "$ID.private" "keys/$ID.$DOMAIN.private"
+mv "$ID.txt" "keys/$ID.$DOMAIN.txt"
 
-# extract string from .txt, replace h=rsa-sha256 with h=sha256, save to keys/$DOMAIN.value
+# extract string from .txt, replace h=rsa-sha256 with h=sha256, save to keys/$ID.$DOMAIN.txt.value
+sed -E \
+  -e 's~^.*\( ~~' \
+  -e 's~h=rsa-sha256~h=sha256~' \
+  -e 's~ \)\s+; ----- DKIM.*~~' \
+  -e 's~\s{2,}~~' \
+  "keys/$ID.$DOMAIN.txt" \
+  | tr -d '\n' \
+  > "keys/$ID.$DOMAIN.txt.value"
+
 
 # Set perms
 chown opendkim:opendkim keys/*
