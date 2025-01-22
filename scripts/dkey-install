@@ -69,8 +69,40 @@ resc() {
     sed -E 's~([.\*])~\\\1~g' <<<"$1"
 }
 
+format-entry() {
+    local key=$1
+    local value=$2
+    local file=$3
+    local keywidth="$(grep -E '^[^#\s].' "$file" | awk '{print $1}' | wc -L)"
+    [[ "${#key}" -lt "$keywidth" ]] || keywidth="${#key}"
+    awk "{printf \"%-${keywidth}s    %s\", \$1, \$2}" <<<"$key $value"
+}
+
+get-entry() {
+    local keyesc="$(resc "$1")"
+    local file="$2"
+    grep -E "^$keyesc\s" "$file"
+}
+
+has-entrykey() {
+    get-entry $@ > /dev/null
+}
+
+has-entry() {
+    local keyesc="$(resc "$1")"
+    local valesc="$(resc "$2")"
+    local file="$3"
+    grep -qE "^$keyesc\s+$valesc\$" "$file"
+}
+
+replace-entry() {
+    local keyesc="$(resc "$1")"
+    local entry="$2"
+    local file="$3"
+    sed -i -E "s~^$keyesc\s.*~$entry~" "$file"
+}
+
 keyfile="$DKIM_KEYS_DIR/$id.$domain.private"
-name="${id}_${domain}"
 keytable="$(opendkim -e KeyTable)"
 signtable="$(opendkim -e SigningTable | sed 's~^refile:~~')"
 
@@ -78,38 +110,37 @@ for file in "$keyfile" "$keytable" "$signtable" ; do
     [[ -e "$file" ]] || fail "$file not found"
 done
 
-keytable_value="$domain:$id:$keyfile"
+keyname="${id}_${domain}"
+keyvalue="$domain:$id:$keyfile"
+keyentry="$(format-entry "$keyname" "$keyvalue" "$keytable")"
 
-name_esc="$(resc "$name")"
-if grep -qE "^$name_esc\s" "$keytable" ; then
-    val_esc="$(resc "$keytable_value")"
-    if grep -qE "^$name_esc\s+$val_esc\$" "$keytable" ; then
+if has-entrykey "$keyname" "$keytable" ; then
+    if has-entry "$keyname" "$keyvalue" "$keytable" ; then
         log_info "Key table entry already present"
     else
-        log_err "$(grep -E "^$name_esc\s" "$keytable")"
+        log_err "$(get-entry "$keyname" "$keytable")"
         fail "Key table entry present but has wrong value"
     fi
 else
     log_info "Adding key table entry"
-    keytable_line="$name    $keytable_value"
-    echo "$keytable_line" >> "$keytable"
+    echo "$keyentry" >> "$keytable"
     ischange=1
 fi
 
-domain_rule="*@$domain"
-rule_esc="$(resc "$domain_rule")"
-if grep -qE "^$rule_esc\s" "$signtable" ; then
-    if grep -qE "^$rule_esc\s+$name_esc\$" "$signtable" ; then
+signrule="*@$domain"
+signentry="$(format-entry "$signrule" "$keyname" "$signtable")"
+
+if has-entrykey "$signrule" "$signtable" ; then
+    if has-entry "$signrule" "$keyname" "$signtable" ; then
         log_info "Signing table entry already present"
     else
         log_info "Updating existing signing table entry"
-        sed -i -E "s~^($rule_esc\s+).*~\1$name~" "$signtable"
+        replace-entry "$signrule" "$signentry" "$signtable"
         ischange=1
     fi
 else
     log_info "Adding signing table entry"
-    signtable_line="$domain_rule    $name"
-    echo "$signtable_line" >> "$signtable"
+    echo "$signentry" >> "$signtable"
     ischange=1
 fi
 
