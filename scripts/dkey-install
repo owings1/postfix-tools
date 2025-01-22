@@ -81,9 +81,9 @@ done
 keytable_value="$domain:$id:$keyfile"
 
 name_esc="$(resc "$name")"
-if grep -q "^$name_esc\s" "$keytable" ; then
+if grep -qE "^$name_esc\s" "$keytable" ; then
     val_esc="$(resc "$keytable_value")"
-    if grep -q "^$name_esc\s+$val_esc\$" "$keytable" ; then
+    if grep -qE "^$name_esc\s+$val_esc\$" "$keytable" ; then
         log_info "Key table entry already present"
     else
         log_err "$(grep -E "^$name_esc\s" "$keytable")"
@@ -98,8 +98,8 @@ fi
 
 domain_rule="*@$domain"
 rule_esc="$(resc "$domain_rule")"
-if grep -q "^$rule_esc\s" "$signtable" ; then
-    if grep -q "^$rule_esc\s+$name_esc\$" "$signtable" ; then
+if grep -qE "^$rule_esc\s" "$signtable" ; then
+    if grep -qE "^$rule_esc\s+$name_esc\$" "$signtable" ; then
         log_info "Signing table entry already present"
     else
         log_info "Updating existing signing table entry"
