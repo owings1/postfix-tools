@@ -86,7 +86,7 @@ if grep -q "^$name_esc\s" "$keytable" ; then
     if grep -q "^$name_esc\s+$val_esc\$" "$keytable" ; then
         log_info "Key table entry already present"
     else
-        log_error "$(grep -E "^$name_esc\s" "$keytable")"
+        log_err "$(grep -E "^$name_esc\s" "$keytable")"
         fail "Key table entry present but has wrong value"
     fi
 else
