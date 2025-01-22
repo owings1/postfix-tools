@@ -1,5 +1,5 @@
 {
-  "hashfiles": [
+  "pmapfiles": [
     "client_checks",
     "sender_checks",
     "local_dsn_filter",

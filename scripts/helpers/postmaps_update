@@ -1,46 +1,55 @@
 #!/usr/bin/env python3
-import os.path
+from __future__ import annotations
+
+import subprocess
 import sys
-from common import bins, clrs, exc, exists, pbname, \
-                    pdname, pjoin, mapdbfile, meta, \
-                    modhash, rdjson, wrfile
+from pathlib import Path
+
+import settings
+from common import Clrs, md5file, meta
+
 
 class Pmap(object):
 
-    def __init__(self, src):
-        self.src = src
-        self.db = mapdbfile(src)
-        self.bname = pbname(self.src)
-        self.hashfile = pjoin(pdname(self.db), '.' + pbname(self.db) + '.phash')
+    def __init__(self, srcfile: Path):
+        self.srcfile = srcfile
+        self.db = Path(f'{self.srcfile.resolve()}.db')
+        self.hashfile = self.srcfile.parent/f'.{self.db.name}.phash'
         self.stored = None
-        self.observed = False
+        self.observed = None
 
     def read(self):
-        if (exists(self.hashfile)):
-            self.stored = open(self.hashfile).read()
-        if (exists(self.src) and exists(self.db)):
-            self.observed = modhash(self.src, self.db)
-        return self
+        if self.hashfile.exists():
+            self.stored = self.hashfile.read_text()
+        if self.srcfile.exists() and self.db.exists():
+            self.observed = modhash(self.srcfile, self.db)
 
+    @property
     def matches(self):
-        return self.stored == self.observed
+        return bool(self.stored) and self.stored == self.observed
 
-    def save(self):
+    def update(self):
+        cmd = [settings.POSTMAP_BIN, self.srcfile]
+        subprocess.run(cmd, check=True)
         self.read()
-        wrfile(self.hashfile, self.observed)
-        return self
+        self.hashfile.write_text(self.observed)
+
+def modstat(file: Path) -> tuple[int, float, str]:
+    stat = file.stat()
+    return (stat.st_size, stat.st_mtime, md5file(file))
+
+def modhash(*files: Path) -> str:
+    return str(tuple(map(modstat, files)))
 
 def main():
-    confdir = sys.argv[1]
-    pmaps = [Pmap(pjoin(confdir, file)) for file in meta.hashfiles]
-    pfx = '[' + clrs.cyanLight + 'postmap' + clrs.reset + ']'
-    for pmap in pmaps:
+    confdir = Path(sys.argv[1])
+    pfx = f'[{Clrs.cyanLight("postmap")}]'
+    for filename in meta.pmapfiles:
+        pmap = Pmap(confdir/filename)
         pmap.read()
-        if meta.forcemaps or not pmap.matches():
-            print(pfx, clrs.yellow + pmap.bname + clrs.reset)
-            exc([bins.postmap, pmap.src])
-            pmap.save()
-        
+        if meta.forcemaps or not pmap.matches:
+            print(pfx, Clrs.yellow(filename))
+            pmap.update()
 
 if  __name__ == '__main__':
     main()

@@ -1,117 +1,71 @@
+from __future__ import annotations
+
 import hashlib
 import json
-import os
-import os.path
-import pathlib
-import shlex
-import shutil
-import subprocess
-import sys
+from enum import Enum
+from pathlib import Path
+from typing import Any
 
-exists = os.path.exists
-pabs = os.path.abspath
-pjoin = os.path.join
-pbname = os.path.basename
-pdname = os.path.dirname
+import settings
 
-def rdjson(file):
-    with open(file) as reader:
-        return json.load(reader)
-def envbool(key):
-    return key in os.environ and bool(os.environ[key])
 
 class AppMeta(object):
     def __init__(self):
-        defaultfile = pjoin(os.path.dirname(pabs(__file__)), '../../docker/files/meta.json')
-        defaults = self.defaults = rdjson(defaultfile)
-        if 'CONFIG_REPO' in os.environ:
-            self.srcdir = os.environ['CONFIG_REPO']
-        else:
-            self.srcdir = '/etc/postfix/repo'
-        self.filesdir = pjoin(self.srcdir, 'files')
-        metafile = pjoin(self.srcdir, 'meta.json')
-        if exists(metafile):
-            data = rdjson(metafile)
-        else:
-            data = defaults
-        def getval(key):
-            return data[key] if key in data else defaults[key]
-
-        self.hashfiles = getval('hashfiles')
-        self.ignorekeys = set(getval('ignorekeys'))
+        self.defaults = _read_json(settings.META_DEFAULTS_FILE)
+        self.srcdir = settings.CONFIG_REPO
+        self.filesdir = self.srcdir/'files'
+        metafile = self.srcdir/'meta.json'
+        data = dict(self.defaults)
+        if metafile.exists():
+            usermeta = _read_json(metafile)
+            data.update(usermeta)
+            data['auth'] = dict(self.defaults['auth'])
+            data['auth'].update(usermeta.get('auth', {}))
+        self.pmapfiles: list[str] = data['pmapfiles']
+        self.ignorekeys = set(data['ignorekeys'])
         self.ignorekeys.add('config_directory')
-        
-        self.force = envbool('FORCE')
-        self.forcefiles = self.force or envbool('FORCE_FILES')
-        self.forceconfig = self.force or envbool('FORCE_CONFIG')
-        self.forcemaps = self.force or envbool('FORCE_MAPS')
-        self.auth = getval('auth')
-        for key in defaults['auth']:
-            if key not in self.auth:
-                self.auth[key] = defaults['auth'][key]
+        self.force = settings.FORCE
+        self.forcefiles = settings.FORCE_FILES
+        self.forceconfig = settings.FORCE_CONFIG
+        self.forcemaps = settings.FORCE_MAPS
+        self.auth = data['auth']
         self.data = data
+
+def _read_json(file: Path) -> dict[str, Any]:
+    with file.open() as f:
+        return json.load(f)
 
 meta = AppMeta()
 
-class Bins(object):
-    def __init__(self):
-        self.postmap = '/usr/sbin/postmap'
 
-bins = Bins()
+def md5file(file: Path) -> str:
+    return hashlib.md5(file.read_bytes()).hexdigest()
 
-def exc(args, check=True, **kw):
-    return subprocess.run(args, check=check, **kw)
+class Clrs(str, Enum):
+    reset = '\x1b[0m'
+    red = '\x1b[0;31m'
+    green = '\x1b[0;32m'
+    blue = '\x1b[0;34m'
+    magenta = '\x1b[0;35m'
+    cyan = '\x1b[0;36m'
+    cyanLight = '\x1b[1;36m'
+    greyLight = '\x1b[0;37m'
+    grey = '\x1b[1;30m'
+    redLight = '\x1b[1;31m'
+    greenLight = '\x1b[1;32m'
+    yellow = '\x1b[0;33m'
+    yellowLight = '\x1b[1;33m'
+    blueLight = '\x1b[1;34m'
+    magentaLight = '\x1b[1;35m'
+    white = '\x1b[1;37m'
+    whiteLight = '\x1b[37;1m'
+    dim = '\x1b[2m'
+    undim = '\x1b[22m'
 
-def mapdbfile(src):
-    return pjoin(os.path.dirname(src), '.'.join([os.path.basename(src), 'db']))
+    def __str__(self):
+        return self.value
 
-def modstat(file):
-    stat = pathlib.Path(file).stat()
-    md5 = md5file(file)
-    return (stat.st_size, stat.st_mtime, md5)
+    def wrap(self, text: str) -> str:
+        return f'{self}{text}{self.reset}'
 
-def modstats(*files):
-    return tuple(modstat(file) for file in files)
-
-def modhash(*files):
-    return str(modstats(*files))
-
-def md5file(file):
-    return hashlib.md5(open(file,'rb').read()).hexdigest()
-
-def qline(line, is_last = False):
-    end = '' if is_last else ' \\'
-    return ''.join(('    ', shlex.quote(line), end))
-
-def wrfile(file, *lines):
-    content = '\n'.join(lines)
-    with open(file, 'w') as writer:
-        writer.write(content)
-
-def wrjson(file, data):
-    with open(file, 'w') as writer:
-        json.dump(data, writer, indent=2)
-
-class Colors(object):
-    def __init__(self):
-        self.reset='\x1b[0m'
-        self.red='\x1b[0;31m'
-        self.green='\x1b[0;32m'
-        self.blue='\x1b[0;34m'
-        self.magenta='\x1b[0;35m'
-        self.cyan='\x1b[0;36m'
-        self.cyanLight='\x1b[1;36m'
-        self.greyLight='\x1b[0;37m'
-        self.grey='\x1b[1;30m'
-        self.redLight='\x1b[1;31m'
-        self.greenLight='\x1b[1;32m'
-        self.yellow='\x1b[0;33m'
-        self.yellowLight='\x1b[1;33m'
-        self.blueLight='\x1b[1;34m'
-        self.magentaLight='\x1b[1;35m'
-        self.white='\x1b[1;37m'
-        self.whiteLight='\x1b[37;1m'
-        self.dim='\x1b[2m'
-        self.undim='\x1b[22m'
-
-clrs = Colors()
+    __call__ = wrap

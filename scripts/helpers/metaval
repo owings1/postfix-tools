@@ -4,22 +4,11 @@ from common import meta
 
 def main():
     key = sys.argv[1]
-    if key == 'auth.dir':
-        print(meta.auth['dir'])
-    elif key == 'auth.alg':
-        print(meta.auth['alg'])
-    elif key == 'auth.group':
-        print(meta.auth['group'])
-    elif key == 'auth.gid':
-        print(str(meta.auth['gid']))
-    elif key == 'auth.uid':
-        print(str(meta.auth['uid']))
-    elif key == 'auth.pwgenopts':
-        print(meta.auth['pwgenopts'])
-    elif key == 'auth.emaildir':
-        print(meta.auth['emaildir'])
+    if key.startswith('auth.'):
+        value = meta.auth[key.removeprefix('auth.')]
     else:
-        raise Exception("unknown key " + key)
+        raise KeyError(key)
+    print(str(value))
 
 if  __name__ == '__main__':
     main()
