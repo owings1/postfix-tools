@@ -1,0 +1,125 @@
+#!/bin/bash
+
+DKIM_KEYS_DIR=/etc/opendkim/keys
+
+dir_="$(dirname "$0")"
+source "$dir_/helpers/common.sh"
+
+set -e
+shopt -s expand_aliases
+
+alias dkey-test="$dir_/dkey-test"
+
+usage="Usage: dkey-install [-f] [-n] DOMAIN [ID]"
+help='
+Install a DKIM key.
+
+  -f, --force       Skip key verification.
+  -n, --norestart   Do not restart opendkim after install.
+'
+
+log_err() {
+  echo "${cRed}Error$cReset $@" >&2
+}
+
+fail() {
+  log_err "$@"
+  exit 1
+}
+
+soft_fail() {
+  echo "$@" >&2
+  exit 1
+}
+
+log_info() {
+  echo "$cMagentaLight$uCaret$cReset $@"
+}
+
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    -h|--help) printf '%s\n%s' "$usage" "$help"; exit 0;;
+    -f|--force) force=1;;
+    -n|--norestart) norestart=1;;
+    -*) fail "Unknown option: $1";;
+    *) true;
+      if [[ -z "$domain" ]]; then
+        domain="$1"
+      elif [[ -z "$id" ]]; then
+        id="$1"
+      else
+        log_err "Too many arguments"
+        soft_fail "$usage"
+      fi;;
+  esac
+  shift
+done
+
+if [[ -z "$id" ]]; then
+  id=$(date +"%Y%m")
+fi
+
+log_info "Installing key $id for domain $domain"
+
+if [[ -z "$force" ]]; then
+    dkey-test "$domain" "$id"
+fi
+
+resc() {
+    sed -E 's~([.\*])~\\\1~g' <<<"$1"
+}
+
+keyfile="$DKIM_KEYS_DIR/$id.$domain.private"
+name="${id}_${domain}"
+keytable="$(opendkim -e KeyTable)"
+signtable="$(opendkim -e SigningTable | sed 's~^refile:~~')"
+
+for file in "$keyfile" "$keytable" "$signtable" ; do
+    [[ -e "$file" ]] || fail "$file not found"
+done
+
+keytable_value="$domain:$id:$keyfile"
+
+name_esc="$(resc "$name")"
+if grep -q "^$name_esc\s" "$keytable" ; then
+    val_esc="$(resc "$keytable_value")"
+    if grep -q "^$name_esc\s+$val_esc\$" "$keytable" ; then
+        log_info "Key table entry already present"
+    else
+        log_error "$(grep -E "^$name_esc\s" "$keytable")"
+        fail "Key table entry present but has wrong value"
+    fi
+else
+    log_info "Adding key table entry"
+    keytable_line="$name    $keytable_value"
+    echo "$keytable_line" >> "$keytable"
+    ischange=1
+fi
+
+domain_rule="*@$domain"
+rule_esc="$(resc "$domain_rule")"
+if grep -q "^$rule_esc\s" "$signtable" ; then
+    if grep -q "^$rule_esc\s+$name_esc\$" "$signtable" ; then
+        log_info "Signing table entry already present"
+    else
+        log_info "Updating existing signing table entry"
+        sed -i -E "s~^($rule_esc\s+).*~\1$name~" "$signtable"
+        ischange=1
+    fi
+else
+    log_info "Adding signing table entry"
+    signtable_line="$domain_rule    $name"
+    echo "$signtable_line" >> "$signtable"
+    ischange=1
+fi
+
+if [[ -n "$ischange" ]]; then
+    if [[ -z "$norestart" ]]; then
+        log_info "Restarting opendkim"
+        service_restart opendkim
+    else
+        log_info "Restart opendkim to activate changes"
+    fi
+else
+    log_info "No changes made"
+fi

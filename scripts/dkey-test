@@ -1,0 +1,57 @@
+#!/bin/bash
+
+dir_="$(dirname "$0")"
+source "$dir_/helpers/common.sh"
+
+set -e
+
+usage="Usage: dkey-test DOMAIN [ID]"
+help='
+Test a DKIM key.
+'
+
+log_err() {
+  echo "${cRed}Error$cReset $@" >&2
+}
+
+fail() {
+  log_err "$@"
+  exit 1
+}
+
+soft_fail() {
+  echo "$@" >&2
+  exit 1
+}
+
+log_info() {
+  echo "$cMagentaLight$uCaret$cReset $@"
+}
+
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    -h|--help) printf '%s\n%s' "$usage" "$help"; exit 0;;
+    -*) fail "Unknown option: $1";;
+    *) true;
+      if [[ -z "$domain" ]]; then
+        domain="$1"
+      elif [[ -z "$id" ]]; then
+        id="$1"
+      else
+        log_err "Too many arguments"
+        soft_fail "$usage"
+      fi;;
+  esac
+  shift
+done
+
+if [[ -z "$id" ]]; then
+  id=$(date +"%Y%m")
+fi
+
+log_info "Testing key $id for domain $domain"
+if opendkim-testkey -d "$domain" -s "$id" ; then
+  log_info "${cGreenLight}OK${cReset}"
+else
+  fail "Key test failed"
+fi

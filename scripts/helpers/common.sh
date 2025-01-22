@@ -106,6 +106,14 @@ service_stop() {
     fi
 }
 
+service_restart() {
+    if is_systemd ; then
+        systemctl restart "$1"
+    else
+        service "$1" restart
+    fi
+}
+
 dovecot_reload() {
     if is_dovecot; then
         echo "Checking if dovecot is up"

@@ -68,7 +68,7 @@ sudo postsuper -d ALL deferred
 openssl x509 -fingerprint -sha256 -noout -in cert.pem 
 ```
 
-```
+```sh
 ## Create DKIM key
 
 # See: https://www.linode.com/docs/email/postfix/configure-spf-and-dkim-in-postfix-on-debian-9
@@ -80,8 +80,8 @@ DOMAIN=<my.domain>
 # Gen key
 cd /etc/opendkim
 opendkim-genkey -b 2048 -h rsa-sha256 -r -s "$ID" -d "$DOMAIN" -v
-mv "$ID.private" "keys/$ID.$DOMAIN.private"
-mv "$ID.txt" "keys/$ID.$DOMAIN.txt"
+mv -v "$ID.private" "keys/$ID.$DOMAIN.private"
+mv -v "$ID.txt" "keys/$ID.$DOMAIN.txt"
 
 # extract string from .txt, replace h=rsa-sha256 with h=sha256, save to keys/$ID.$DOMAIN.txt.value
 sed -E \
@@ -99,11 +99,31 @@ chown opendkim:opendkim keys/*
 chmod 0600 keys/*
 
 # create DNS record $ID._domainkey
+echo "
+Create record:
+
+$ID._domainkey
+"
+cat keys/$ID.$DOMAIN.txt.value
+echo
 
 # Test record
-opendkim-testkey -d "$DOMAIN" -s "$ID"
+opendkim-testkey -d "$DOMAIN" -s "$ID" && echo OK || echo FAIL && false
 
-# Add records to signing.table and key.table
+# Add to key.table
+ALIAS="${ID}_${DOMAIN}"
+echo "$ALIAS    $DOMAIN:$ID:$PWD/keys/$ID.$DOMAIN.private" | tee -a key.table
+
+# Update signing.table
+DOMAIN_ESC=$(sed 's~\.~\\.~g' <<<"$DOMAIN")
+if grep -q "^\*@$DOMAIN_ESC\s" signing.table ; then
+  # Update alias for existing domain
+  sed -i -E "s~^(\*@$DOMAIN_ESC\s+).*~\1$ALIAS~" signing.table
+else
+  # Add alias for new domain
+  echo "*@$DOMAIN    $ALIAS" | tee -a signing.table
+fi
+grep "^\*@$DOMAIN_ESC\s" signing.table
 
 # Restart opendkim
 systemctl restart opendkim

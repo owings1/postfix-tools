@@ -9,4 +9,5 @@ logfiles=("${APP_LOGS[@]}")
 logfiles+=(backup.log)
 
 cd /var/log
-tail -F $@ "${logfiles[@]}" 2>/dev/null | "$dir_/clr"
+args=("$@")
+tail -F "${args[@]}" "${logfiles[@]}" 2>/dev/null | "$dir_/clr"

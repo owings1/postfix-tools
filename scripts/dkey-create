@@ -1,0 +1,151 @@
+#!/bin/bash
+
+DKIM_KEYS_DIR=/etc/opendkim/keys
+
+dir_="$(dirname "$0")"
+source "$dir_/helpers/common.sh"
+
+set -e
+shopt -s expand_aliases
+
+alias dkey-test="$dir_/dkey-test"
+alias dkey-install="$dir_/dkey-install"
+
+usage="Usage: dkey-create [-w] [-n] DOMAIN [ID]"
+help='
+Create a DKIM key.
+
+  -w, --wait       Wait for verification, then install the key.
+  -n, --norestart  Do not restart opendkim after install.
+'
+
+log_err() {
+  echo "${cRed}Error$cReset $@" >&2
+}
+
+warn() {
+  echo "${cYellowLight}Warn${cReset} $@" >&2
+}
+
+fail() {
+  log_err "$@"
+  exit 1
+}
+
+soft_fail() {
+  echo "$@" >&2
+  exit 1
+}
+
+log_info() {
+  echo "$cMagentaLight$uCaret$cReset $@"
+}
+
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    -h|--help) printf '%s\n%s' "$usage" "$help"; exit 0;;
+    -w|--wait) wait=1;;
+    -n|--norestart) norestart=1;;
+    -*) fail "Unknown option: $1";;
+    *) true;
+      if [[ -z "$domain" ]]; then
+        domain="$1"
+      elif [[ -z "$id" ]]; then
+        id="$1"
+      else
+        log_err "Too many arguments"
+        soft_fail "$usage"
+      fi;;
+  esac
+  shift
+done
+
+if [[ -z "$id" ]]; then
+  id=$(date +"%Y%m")
+fi
+
+log_info "Creating key $id for domain $domain"
+
+dkimuser="$(opendkim -e UserID)"
+keyfile="$DKIM_KEYS_DIR/$id.$domain.private"
+txtfile="$DKIM_KEYS_DIR/$id.$domain.txt"
+valuefile="$txtfile.value"
+linefile="$txtfile.line"
+
+if [[ -e "$keyfile" ]]; then
+  fail "$keyfile already exists"
+fi
+
+mkdir -p "$DKIM_KEYS_DIR"
+
+tmpdir=$(mktemp -d)
+cd "$tmpdir"
+opendkim-genkey -b 2048 -h rsa-sha256 -r -s "$ID" -d "$DOMAIN" -v
+chown "$dkimuser:$dkimuser" *
+chmod 0600 *
+mv "$ID.private" "$keyfile"
+mv "$ID.txt" "$txtfile"
+cd "$KEYS_DIR"
+rmdir "$tmpdir"
+
+log_info "Created $keyfile"
+
+# extract string from .txt, replace h=rsa-sha256 with h=sha256, save to keys/$ID.$DOMAIN.txt.value
+sed -E \
+  -e 's~^.*\( ~~' \
+  -e 's~h=rsa-sha256~h=sha256~' \
+  -e 's~ \)\s+; ----- DKIM.*~~' \
+  -e 's~\s{2,}~~' \
+  "$txtfile" \
+  | tr -d '\n' \
+  > "$valuefile"
+
+tr -d '"' < "$valuefile" > "$linefile"
+
+echo "
+Create the following DNS TXT record for $domain:
+
+Name:
+$ID._domainkey
+
+Value (Route53 style):"
+cat "$valuefile"
+echo "
+
+
+Value (single line):"
+cat "$linefile"
+echo
+
+if [[ -z "$wait" ]]; then
+  echo
+  echo "After creating the DNS record, proceed with the following:"
+fi
+
+echo "
+Test command:
+
+  ${cWhiteLight}dkey-test $domain $id${cReset}
+
+Install command:
+
+  ${cWhiteLight}dkey-install $domain $id${cReset}
+"
+
+if [[ -z "$wait" ]]; then
+  exit 0
+fi
+
+iflags=("-f")
+if [[ -n "$norestart" ]]; then
+  iflags+=("-n")
+fi
+while true ; do
+  log_info "Press [return] to verify & install"
+  read
+  if dkey-test "$domain" "$id" ; then
+    dkey-install "${iflags[@]}" "$domain" "$id"
+    break
+  fi
+  warn "Key test failed"
+done
