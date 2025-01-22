@@ -1,4 +1,4 @@
-FROM ubuntu:hirsute
+FROM docker.io/ubuntu:jammy
 
 RUN ln -fs /usr/share/zoneinfo/America/Los_Angeles /etc/localtime && \
     DEBIAN_FRONTEND=noninteractive \
@@ -31,12 +31,14 @@ RUN apt-get update -qq && apt-get install -qy --no-install-recommends \
 
 # postforward
 RUN apt-get update -qq && apt-get install -qqy --no-install-recommends \
-    make curl ca-certificates && \
+    make curl ca-certificates golang && \
     mkdir /tmp/pf && cd /tmp/pf && \
-    curl -sL 'https://golang.org/dl/go1.17.1.linux-amd64.tar.gz' | tar xz && \
     curl -sL 'https://github.com/zoni/postforward/tarball/v1.1.1' | tar xz --strip-components=1 && \
-    PATH="$PATH:/tmp/pf/go/bin" make && mv postforward /usr/sbin && \
-    cd /tmp && rm -r /tmp/pf && apt-get purge -qy make && apt-get clean
+    make && mv postforward /usr/sbin && \
+    cd /tmp && rm -r /tmp/pf && \
+    apt-get purge -qy make golang && \
+    apt-get autoremove -qy && \
+    apt-get clean
 
 # postwhite
 RUN mkdir -p /usr/local/src/spf-tools && cd /usr/local/src/spf-tools && \
@@ -46,11 +48,11 @@ RUN mkdir -p /usr/local/src/spf-tools && cd /usr/local/src/spf-tools && \
 
 # General Utilities
 RUN apt-get update -qq && apt-get install -qqy \
-    psmisc curl telnet less nano ccze bash-completion busybox procmail && \
+    psmisc curl telnet less nano ccze bash-completion busybox procmail python3-dotenv && \
     apt-get clean
 
 EXPOSE 25 143 587
-ENV CONFIG_REPO /source
+ENV CONFIG_REPO=/source
 WORKDIR /source
 COPY . /app
 VOLUME /source

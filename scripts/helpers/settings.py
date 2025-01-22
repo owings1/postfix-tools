@@ -1,5 +1,10 @@
-from pathlib import Path
 from os import getenv
+from pathlib import Path
+
+import dotenv
+
+if Path('/etc/postfix/environment').exists():
+    dotenv.load_dotenv('/etc/postfix/environment')
 
 BASE_DIR = Path(__file__).parent.parent.parent
 META_DEFAULTS_FILE = BASE_DIR/'docker/files/meta.json'
