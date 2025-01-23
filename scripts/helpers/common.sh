@@ -9,6 +9,9 @@ fi
 if [[ -z "$CONFIG_REPO" ]]; then
     CONFIG_REPO="/etc/postfix/repo"
 fi
+if [[ -z "$DKIM_KEYS_DIR" ]]; then
+    DKIM_KEYS_DIR="/etc/opendkim/keys"
+fi
 
 alias doveadm=/usr/bin/doveadm
 alias doveconf=/usr/bin/doveconf

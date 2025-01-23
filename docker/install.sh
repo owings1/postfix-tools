@@ -12,7 +12,7 @@ helpers_="$scripts_/helpers"
 nanorc_="$(abs "$dir_/../nanorc")"
 
 # Compatibility symlink
-ln -s /app /usr/local/src/postfix-tools
+ln -s /app /opt/postfix-tools
 
 # Dsable kernel logging for docker
 sed -i 's/^module.*"imklog".*/#\0/' /etc/rsyslog.conf

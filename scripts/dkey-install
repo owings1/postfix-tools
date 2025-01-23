@@ -9,8 +9,6 @@ Install a DKIM key. If ID is not specified, defaults to current YYYYMM.
   -n, --norestart   Do not restart opendkim after install.
 '
 
-DKIM_KEYS_DIR=/etc/opendkim/keys
-
 dir_="$(dirname "$0")"
 source "$dir_/helpers/common.sh"
 
@@ -57,9 +55,9 @@ while [[ "$#" -gt 0 ]]; do
   shift
 done
 
-if [[ -z "$id" ]]; then
-  id=$(date +"%Y%m")
-fi
+[[ -n "$id" ]] || id=$(date +"%Y%m")
+
+[[ -n "$DKIM_KEYS_DIR" ]] || fail "DKIM_KEYS_DIR not set"
 
 resc() {
   sed -E 's~([.\*])~\\\1~g' <<<"$1"
@@ -100,9 +98,7 @@ replace-entry() {
 
 log_info "Installing key $id for domain $domain"
 
-if [[ -z "$force" ]]; then
-  dkey-test "$domain" "$id"
-fi
+[[ -n "$force" ]] || dkey-test "$domain" "$id"
 
 keyname="${id}_${domain}"
 keyfile="$DKIM_KEYS_DIR/$id.$domain.private"

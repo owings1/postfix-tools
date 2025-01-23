@@ -15,9 +15,9 @@ cp "$dir_/default" /etc/default/opendkim
 cp "$dir_/opendkim.conf" /etc/
 chmod 0644 /etc/opendkim.conf
 
-mkdir -p /etc/opendkim/keys
+mkdir -p "$DKIM_KEYS_DIR"
 chown -R opendkim:opendkim /etc/opendkim
-chmod go-rw /etc/opendkim/keys
+chmod go-rw "$DKIM_KEYS_DIR"
 pushdq /etc/opendkim
 touch signing.table key.table trusted.hosts
 popdq
