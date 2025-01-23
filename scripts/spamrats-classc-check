@@ -104,7 +104,7 @@ while [[ "$#" -gt 0 ]]; do
         -f|--fail) alias o_fail=true;;
         -i|--stdin) alias o_stdin=true;;
         -m|--match) alias o_match=true;;
-        -r|--reject) alias match_fmt='%-20s%s reject';;
+        -r|--reject) match_fmt='%-20s%s reject';;
         -q|--quiet) alias o_quiet=true;;
         -*) fail "Unknown option: $1";;
         *) true;
