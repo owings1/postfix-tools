@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import fileinput
+from argparse import ArgumentParser
+from ipaddress import IPv4Network, IPv6Network, collapse_addresses, ip_network
+
+
+class Parser(ArgumentParser):
+    description = "Collapse CIDRs from files or stdin"
+    usage = "Usage: cidrcollapse [OPTIONS] [FILE ...]"
+
+    def add_arguments(self) -> None:
+        arg = self.add_argument
+        arg('files', nargs='*', help='Input files. If omitted, reads from stdin')
+        arg('--sort', '-s', action='store_true', help='Sort the output')
+        arg('--reverse', '-r', action='store_true', help='Reverse sort the output')
+        arg('--compact', '-c', action='store_true', help='Omit prefix length for single addresses')
+
+def nocomment(s: str) -> bool:
+    return not s.startswith('#')
+
+def compact(value: IPv4Network|IPv6Network) -> str:
+    if value.num_addresses == 1:
+        value, = value.hosts()
+    return str(value)
+
+def main(*args: str) -> None:
+    parser = Parser()
+    parser.add_arguments()
+    opts = parser.parse_args(*args)
+    opts.sort |= opts.reverse
+    with fileinput.input(opts.files, encoding='utf-8') as file:
+        it = map(str.strip, file)
+        it = filter(None, it)
+        it = filter(nocomment, it)
+        it = map(ip_network, it)
+        it = collapse_addresses(it)
+        nets = list(it)
+    if opts.sort:
+        nets.sort(reverse=opts.reverse)
+    if opts.compact:
+        it = map(compact, nets)
+    else:
+        it = map(str, nets)
+    print('\n'.join(it))
+
+if __name__ == '__main__':
+    main()

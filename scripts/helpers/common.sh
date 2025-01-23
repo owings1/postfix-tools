@@ -77,7 +77,7 @@ is_systemd() {
 
 service_up() {
     if is_systemd; then
-        systemctl is-active "$1" > /dev/null
+        systemctl is-active -q "$1"
     else
         service "$1" status
     fi
