@@ -65,7 +65,7 @@ if [[ -z "$id" ]]; then
 fi
 
 alias dkey-test="$dir_/dkey-test"
-alias dkey-install="$dir_/dkey-install ${install_flags[@]}"
+alias dkey-install="$dir_/dkey-install"
 
 log_info "Creating key $id for domain $domain"
 
@@ -148,4 +148,4 @@ while true; do
   warn "Key test failed"
 done
 
-dkey-install "$domain" "$id"
+dkey-install "${install_flags[@]}" "$domain" "$id"
