@@ -26,10 +26,10 @@ def compact(value: IPv4Network|IPv6Network) -> str:
         value, = value.hosts()
     return str(value)
 
-def main(*args: str) -> None:
+def main(args=None) -> None:
     parser = Parser()
     parser.add_arguments()
-    opts = parser.parse_args(*args)
+    opts = parser.parse_args(args)
     opts.sort |= opts.reverse
     with fileinput.input(opts.files, encoding='utf-8') as file:
         it = map(str.strip, file)
