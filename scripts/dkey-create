@@ -1,5 +1,14 @@
 #!/bin/bash
 
+usage="Usage: dkey-create [-w] [-k] [-n] DOMAIN [ID]"
+help='
+Create a DKIM key. If ID is not specified, defaults to current YYYYMM.
+
+  -w, --wait       Wait for confirmation, then install the key.
+  -k, --keyonly    Only update key table, but not signing table.
+  -n, --norestart  Do not restart opendkim after install.
+'
+
 DKIM_KEYS_DIR=/etc/opendkim/keys
 
 dir_="$(dirname "$0")"
@@ -7,17 +16,6 @@ source "$dir_/helpers/common.sh"
 
 set -e
 shopt -s expand_aliases
-
-alias dkey-test="$dir_/dkey-test"
-alias dkey-install="$dir_/dkey-install"
-
-usage="Usage: dkey-create [-w] [-n] DOMAIN [ID]"
-help='
-Create a DKIM key.
-
-  -w, --wait       Wait for verification, then install the key.
-  -n, --norestart  Do not restart opendkim after install.
-'
 
 log_err() {
   echo "${cRed}Error$cReset $@" >&2
@@ -41,11 +39,13 @@ log_info() {
   echo "$cMagentaLight$uCaret$cReset $@"
 }
 
+install_flags=("-f")
+
 while [[ "$#" -gt 0 ]]; do
   case "$1" in
     -h|--help) printf '%s\n%s' "$usage" "$help"; exit 0;;
     -w|--wait) wait=1;;
-    -n|--norestart) norestart=1;;
+    -n|--norestart|-k|--keyonly) install_flags+=("$1");;
     -*) fail "Unknown option: $1";;
     *) true;
       if [[ -z "$domain" ]]; then
@@ -63,6 +63,9 @@ done
 if [[ -z "$id" ]]; then
   id=$(date +"%Y%m")
 fi
+
+alias dkey-test="$dir_/dkey-test"
+alias dkey-install="$dir_/dkey-install ${install_flags[@]}"
 
 log_info "Creating key $id for domain $domain"
 
@@ -136,16 +139,13 @@ if [[ -z "$wait" ]]; then
   exit 0
 fi
 
-iflags=("-f")
-if [[ -n "$norestart" ]]; then
-  iflags+=("-n")
-fi
-while true ; do
+while true; do
   log_info "Press [return] to verify & install"
   read
-  if dkey-test "$domain" "$id" ; then
-    dkey-install "${iflags[@]}" "$domain" "$id"
+  if dkey-test "$domain" "$id"; then
     break
   fi
   warn "Key test failed"
 done
+
+dkey-install "$domain" "$id"

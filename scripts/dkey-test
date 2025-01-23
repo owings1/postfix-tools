@@ -1,14 +1,14 @@
 #!/bin/bash
 
+usage="Usage: dkey-test DOMAIN [ID]"
+help='
+Test a DKIM key. If ID is not specified, defaults to current YYYYMM.
+'
+
 dir_="$(dirname "$0")"
 source "$dir_/helpers/common.sh"
 
 set -e
-
-usage="Usage: dkey-test DOMAIN [ID]"
-help='
-Test a DKIM key.
-'
 
 log_err() {
   echo "${cRed}Error$cReset $@" >&2
@@ -51,7 +51,7 @@ fi
 
 log_info "Testing key $id for domain $domain"
 if opendkim-testkey -d "$domain" -s "$id" ; then
-  log_info "${cGreenLight}OK${cReset}"
+  log_info "Key test ${cGreenLight}OK${cReset}"
 else
   fail "Key test failed"
 fi

@@ -1,5 +1,14 @@
 #!/bin/bash
 
+usage="Usage: dkey-install [-k] [-f] [-n] DOMAIN [ID]"
+help='
+Install a DKIM key. If ID is not specified, defaults to current YYYYMM.
+
+  -k, --keyonly     Only update key table, but not signing table.
+  -f, --force       Skip key verification.
+  -n, --norestart   Do not restart opendkim after install.
+'
+
 DKIM_KEYS_DIR=/etc/opendkim/keys
 
 dir_="$(dirname "$0")"
@@ -9,14 +18,6 @@ set -e
 shopt -s expand_aliases
 
 alias dkey-test="$dir_/dkey-test"
-
-usage="Usage: dkey-install [-f] [-n] DOMAIN [ID]"
-help='
-Install a DKIM key.
-
-  -f, --force       Skip key verification.
-  -n, --norestart   Do not restart opendkim after install.
-'
 
 log_err() {
   echo "${cRed}Error$cReset $@" >&2
@@ -41,6 +42,7 @@ while [[ "$#" -gt 0 ]]; do
     -h|--help) printf '%s\n%s' "$usage" "$help"; exit 0;;
     -f|--force) force=1;;
     -n|--norestart) norestart=1;;
+    -k|--keyonly) keyonly=1;;
     -*) fail "Unknown option: $1";;
     *) true;
       if [[ -z "$domain" ]]; then
@@ -59,98 +61,104 @@ if [[ -z "$id" ]]; then
   id=$(date +"%Y%m")
 fi
 
-log_info "Installing key $id for domain $domain"
-
-if [[ -z "$force" ]]; then
-    dkey-test "$domain" "$id"
-fi
-
 resc() {
-    sed -E 's~([.\*])~\\\1~g' <<<"$1"
+  sed -E 's~([.\*])~\\\1~g' <<<"$1"
 }
 
 format-entry() {
-    local key=$1
-    local value=$2
-    local file=$3
-    local keywidth="$(grep -E '^[^#\s].' "$file" | awk '{print $1}' | wc -L)"
-    [[ "${#key}" -lt "$keywidth" ]] || keywidth="${#key}"
-    awk "{printf \"%-${keywidth}s    %s\", \$1, \$2}" <<<"$key $value"
+  local key=$1
+  local value=$2
+  local file=$3
+  local keywidth="$(grep -E '^[^#\s].' "$file" | awk '{print $1}' | wc -L)"
+  [[ "${#key}" -lt "$keywidth" ]] || keywidth="${#key}"
+  printf "%-${keywidth}s    %s" "$key" "$value"
 }
 
 get-entry() {
-    local keyesc="$(resc "$1")"
-    local file="$2"
-    grep -E "^$keyesc\s" "$file"
+  local keyesc="$(resc "$1")"
+  local file="$2"
+  grep -E "^$keyesc\s" "$file"
 }
 
 has-entrykey() {
-    get-entry $@ > /dev/null
+  get-entry $@ > /dev/null
 }
 
 has-entry() {
-    local keyesc="$(resc "$1")"
-    local valesc="$(resc "$2")"
-    local file="$3"
-    grep -qE "^$keyesc\s+$valesc\$" "$file"
+  local keyesc="$(resc "$1")"
+  local valesc="$(resc "$2")"
+  local file="$3"
+  grep -qE "^$keyesc\s+$valesc\$" "$file"
 }
 
 replace-entry() {
-    local keyesc="$(resc "$1")"
-    local entry="$2"
-    local file="$3"
-    sed -i -E "s~^$keyesc\s.*~$entry~" "$file"
+  local keyesc="$(resc "$1")"
+  local entry="$2"
+  local file="$3"
+  sed -i -E "s~^$keyesc\s.*~$entry~" "$file"
 }
 
+log_info "Installing key $id for domain $domain"
+
+if [[ -z "$force" ]]; then
+  dkey-test "$domain" "$id"
+fi
+
+keyname="${id}_${domain}"
 keyfile="$DKIM_KEYS_DIR/$id.$domain.private"
 keytable="$(opendkim -e KeyTable)"
 signtable="$(opendkim -e SigningTable | sed 's~^refile:~~')"
 
-for file in "$keyfile" "$keytable" "$signtable" ; do
-    [[ -e "$file" ]] || fail "$file not found"
+for file in "$keyfile" "$keytable" "$signtable"; do
+  [[ -e "$file" ]] || fail "$file not found"
 done
 
-keyname="${id}_${domain}"
-keyvalue="$domain:$id:$keyfile"
-keyentry="$(format-entry "$keyname" "$keyvalue" "$keytable")"
-
-if has-entrykey "$keyname" "$keytable" ; then
-    if has-entry "$keyname" "$keyvalue" "$keytable" ; then
-        log_info "Key table entry already present"
+do-update-table() {
+  local key="$1"
+  local value="$2"
+  local file="$3"
+  local desc="$4"
+  local entry="$(format-entry "$key" "$value" "$file")"
+  if has-entrykey "$key" "$file"; then
+    if has-entry "$key" "$value" "$file"; then
+      log_info "$desc: entry already present"
     else
-        log_err "$(get-entry "$keyname" "$keytable")"
-        fail "Key table entry present but has wrong value"
+      log_info "$desc: updating existing entry"
+      replace-entry "$key" "$entry" "$file"
+      ischange=1
     fi
-else
-    log_info "Adding key table entry"
-    echo "$keyentry" >> "$keytable"
+  else
+    log_info "$desc: adding new entry"
+    echo "$entry" >> "$file"
     ischange=1
-fi
+  fi
+}
 
-signrule="*@$domain"
-signentry="$(format-entry "$signrule" "$keyname" "$signtable")"
+update-keytable() {
+  local key="$keyname"
+  local value="$domain:$id:$keyfile"
+  local file="$keytable"
+  do-update-table "$key" "$value" "$file" "Key table"
+}
 
-if has-entrykey "$signrule" "$signtable" ; then
-    if has-entry "$signrule" "$keyname" "$signtable" ; then
-        log_info "Signing table entry already present"
-    else
-        log_info "Updating existing signing table entry"
-        replace-entry "$signrule" "$signentry" "$signtable"
-        ischange=1
-    fi
-else
-    log_info "Adding signing table entry"
-    echo "$signentry" >> "$signtable"
-    ischange=1
-fi
+update-signtable() {
+  local key="*@$domain"
+  local value="$keyname"
+  local file="$signtable"
+  do-update-table "$key" "$value" "$file" "Signing table"
+}
+
+update-keytable
+
+[[ -n "$keyonly" ]] || update-signtable
 
 if [[ -n "$ischange" ]]; then
-    if [[ -z "$norestart" ]]; then
-        log_info "Restarting opendkim"
-        service_restart opendkim
-    else
-        log_info "Restart opendkim to activate changes"
-    fi
+  if [[ -z "$norestart" ]]; then
+    log_info "Restarting opendkim"
+    service_restart opendkim
+  else
+    log_info "Restart opendkim to activate changes"
+  fi
 else
-    log_info "No changes made"
+  log_info "No changes made"
 fi
