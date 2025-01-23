@@ -39,9 +39,9 @@ def cppatch(fromdir: Path, todir: Path, files: Iterable[Path]) -> str:
     filenames = sorted(file.name for file in files)
     lines: list[str] = []
     lines += [f'# - {name}' for name in filenames]
-    lines += [f'cd {shlex.quote(fromdir.resolve())} && install -v -p -m 0644 \\']
+    lines += [f'cd {shlex.quote(str(fromdir))} && install -v -p -m 0644 \\']
     lines += [f'    {shlex.quote(name)} \\' for name in filenames]
-    lines += [f'    {shlex.quote(todir.resolve())}']
+    lines += [f'    {shlex.quote(str(todir))}']
     lines += ['']
     return '\n'.join(lines)
 
