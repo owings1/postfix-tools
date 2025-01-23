@@ -83,17 +83,17 @@ mkdir -p "$DKIM_KEYS_DIR"
 
 tmpdir=$(mktemp -d)
 cd "$tmpdir"
-opendkim-genkey -b 2048 -h rsa-sha256 -r -s "$ID" -d "$DOMAIN" -v
+opendkim-genkey -b 2048 -h rsa-sha256 -r -s "$id" -d "$domain" -v
 chown "$dkimuser:$dkimuser" *
 chmod 0600 *
-mv "$ID.private" "$keyfile"
-mv "$ID.txt" "$txtfile"
-cd "$KEYS_DIR"
+mv "$id.private" "$keyfile"
+mv "$id.txt" "$txtfile"
+cd "$DKIM_KEYS_DIR"
 rmdir "$tmpdir"
 
 log_info "Created $keyfile"
 
-# extract string from .txt, replace h=rsa-sha256 with h=sha256, save to keys/$ID.$DOMAIN.txt.value
+# extract string from .txt, replace h=rsa-sha256 with h=sha256
 sed -E \
   -e 's~^.*\( ~~' \
   -e 's~h=rsa-sha256~h=sha256~' \
@@ -109,7 +109,7 @@ echo "
 Create the following DNS TXT record for $domain:
 
 Name:
-$ID._domainkey
+$id._domainkey
 
 Value (Route53 style):"
 cat "$valuefile"
