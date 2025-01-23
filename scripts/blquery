@@ -8,7 +8,7 @@ Query postscreen cidr maps.
 '
 
 shopt -s expand_aliases
-dir_="$(abs `dirname "$0"`)"
+dir_="$(dirname "$0")"
 
 source "$dir_/helpers/common.sh"
 

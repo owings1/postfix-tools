@@ -29,7 +29,7 @@ Notes:
 set -e
 shopt -s expand_aliases
 
-dir_="$(abs `dirname "$0"`)"
+dir_="$(dirname "$0")"
 source "$dir_/helpers/common.sh"
 
 if is_color ; then
