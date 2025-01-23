@@ -1,8 +1,16 @@
 #!/bin/bash
 
-source "$(dirname "$0")/helpers/common.sh"
+usage='Usage: blquery [-i] [IP ...]'
+help='
+Query postscreen cidr maps.
 
-dir_="$(abs "$(dirname "$0")")"
+   -i, --stdin              Read IP address from stdin.
+'
+
+shopt -s expand_aliases
+dir_="$(abs `dirname "$0"`)"
+
+source "$dir_/helpers/common.sh"
 
 if is_color ; then
   alias clr="$dir_/clr"
@@ -10,21 +18,91 @@ else
   alias clr=cat
 fi
 
+log_err() {
+  echo "${cRed}Error$cReset $@" >&2
+}
+
+log_warn() {
+  echo "${cYellowLight}Warning${cReset} $@" >&2
+}
+
+fail() {
+  log_err "$@"
+  cleanup
+  exit 1
+}
+
+soft_fail() {
+  echo "$@" >&2
+  cleanup
+  exit 1
+}
+
+log_info() {
+  echo "$@" | clr
+}
+
+cleanup() {
+  if [[ ! -z "$tmp" ]] && [[ -d "$tmp" ]]; then
+    rm -r "$tmp"
+  fi
+}
+
+[[ "$#" -gt 0 ]] || soft_fail "$usage"
+
+tmp="$(mktemp -d)"
+debug "Temp dir: $tmp"
+
+fips="$tmp/ips"
+
+alias o_stdin=false
+
+while [[ "$#" -gt 0 ]]; do
+  case "$1" in
+    -h|--help) printf '%s\n%s' "$usage" "$help"; exit 0;;
+    -i|--stdin) alias o_stdin=true;;
+    -*) fail "Unknown option: $1";;
+    *) true;
+        if o_stdin; then
+          log_err "Cannot pass IP arguments with --stdin"
+          soft_fail "$usage"
+        else
+          echo "$1" >> "$fips"
+        fi;;
+  esac
+  shift
+done
+
+# No IPs passed
+if ! o_stdin && [[ ! -e "$fips" ]]; then
+  log_err "No IPs passed"
+  soft_fail "$usage"
+fi
+
 dbs=($(postconf -xh postscreen_access_list | grep '^cidr:'))
 
-qs=($@)
-
-for ip in "${qs[@]}" ; do
-  found=0
-  for db in "${dbs[@]}" ; do
-    fname="$(awk -F: '{print $NF}' <<< "$db")"
-    res="$(postmap -q "$ip" "$db")"
-    if [[ "$?" = 0 ]]; then
-      echo "$ip $res $fname" | clr
-      found=1
+do-lookups() {
+  local db ip fname found res
+  while read ip ; do
+    found=0
+    for db in "${dbs[@]}" ; do
+      fname="$(awk -F: '{print $NF}' <<< "$db")"
+      res="$(postmap -q "$ip" "$db")"
+      if [[ "$?" = 0 ]]; then
+        echo "$ip $res $fname" | clr
+        found=1
+      fi
+    done
+    if [[ "$found" -ne 1 ]]; then
+      echo "$ip NotFound" | clr
     fi
   done
-  if [[ "$found" -ne 1 ]]; then
-    echo "$ip NotFound" | clr >&2
-  fi
-done
+}
+
+if o_stdin ; then
+  do-lookups <&0
+else
+  do-lookups < "$fips"
+fi
+
+cleanup

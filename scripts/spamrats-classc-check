@@ -1,29 +1,9 @@
 #!/bin/bash
 
-shopt -s expand_aliases
-
-set -e
-
-source "$(dirname "$0")/helpers/common.sh"
-
-scripts="$(abs `dirname "$0"`)"
-
-if is_color ; then
-  alias clr="$scripts/clr"
-else
-  alias clr=cat
-fi
-
 default_delay="5"
-
-alias ipgrep="$scripts/ipgrep"
-
-url="https://www.spamrats.com/lookup.php"
-
 bn_="$(basename "$0")"
-usage="Usage: $bn_ [OPTION]... [IP]..."
-help="$usage
-
+usage="Usage: $bn_ [OPTIONS] [IP ...]"
+help="
 Check if spamrats considers the whole class C suspect
 
 Examples:
@@ -45,6 +25,22 @@ Notes:
   - The delay is always performed before the query, in case this
     is called multiple times from a script.
   - Invalid or private IP addresses are skipped with a warning"
+
+set -e
+shopt -s expand_aliases
+
+dir_="$(abs `dirname "$0"`)"
+source "$dir_/helpers/common.sh"
+
+if is_color ; then
+  alias clr="$dir_/clr"
+else
+  alias clr=cat
+fi
+
+alias ipgrep="$dir_/ipgrep"
+
+url="https://www.spamrats.com/lookup.php"
 
 log_err() {
     echo "${cRed}Error$cReset $@" >&2
@@ -76,9 +72,7 @@ cleanup() {
     fi
 }
 
-if [[ "$#" = 0 ]]; then
-    soft_fail "$usage"
-fi
+[[ "$#" -gt 0 ]] || soft_fail "$usage"
 
 tmp="$(mktemp -d)"
 debug "Temp dir: $tmp"
@@ -93,7 +87,7 @@ alias o_fail=false
 
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
-        -h|--help) printf '%s\n' "$help" >&2 ; exit 0;;
+        -h|--help) printf '%s\n%s' "$usage" "$help" >&2 ; exit 0;;
         -d|--delay) true;
             if grep -qE '^[0-9]+[smh]?$' <<< "$2"; then
                 delay="$2"
@@ -104,15 +98,15 @@ while [[ "$#" -gt 0 ]]; do
         -f|--fail) alias o_fail=true;;
         -i|--stdin) alias o_stdin=true;;
         -m|--match) alias o_match=true;;
-        -r|--reject) match_fmt='%-20s%s reject';;
+        -r|--reject) match_fmt='%-19s%s reject';;
         -q|--quiet) alias o_quiet=true;;
         -*) fail "Unknown option: $1";;
         *) true;
-            if [[ -z "$stdin" ]]; then
-                echo "$1" >> "$fips"
-            else
+            if o_stdin; then
                 log_err "Cannot pass IP arguments with --stdin"
                 soft_fail "$usage"
+            else
+                echo "$1" >> "$fips"
             fi;;
     esac
     shift
@@ -124,9 +118,7 @@ if ! o_stdin && [[ ! -e "$fips" ]]; then
     soft_fail "$usage"
 fi
 
-if [[ -z "$delay" ]]; then
-    delay="$default_delay"
-fi
+[[ -n "$delay" ]] || delay="$default_delay"
 
 cnt_lookups=0
 cnt_match_classc=0
