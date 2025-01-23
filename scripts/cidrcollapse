@@ -4,6 +4,7 @@ from __future__ import annotations
 import fileinput
 from argparse import ArgumentParser
 from ipaddress import IPv4Network, IPv6Network, collapse_addresses, ip_network
+from itertools import chain
 
 
 class Parser(ArgumentParser):
@@ -35,14 +36,22 @@ def main(*args: str) -> None:
         it = filter(None, it)
         it = filter(nocomment, it)
         it = map(ip_network, it)
-        it = collapse_addresses(it)
         nets = list(it)
+        it4 = filter(lambda x: isinstance(x, IPv4Network), nets)
+        it6 = filter(lambda x: isinstance(x, IPv6Network), nets)
+        it4 = collapse_addresses(it4)
+        it6 = collapse_addresses(it6)
+        fams = [list(it4), list(it6)]
     if opts.sort:
-        nets.sort(reverse=opts.reverse)
+        for fam in fams:
+            fam.sort(reverse=opts.reverse)
+    if opts.reverse:
+        fams.reverse()
+    it = chain(*fams)
     if opts.compact:
-        it = map(compact, nets)
+        it = map(compact, it)
     else:
-        it = map(str, nets)
+        it = map(str, it)
     print('\n'.join(it))
 
 if __name__ == '__main__':
