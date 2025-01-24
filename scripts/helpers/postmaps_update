@@ -11,8 +11,9 @@ from common import Clrs, md5file, meta
 
 class Pmap(object):
 
-    def __init__(self, srcfile: Path):
+    def __init__(self, srcfile: Path, *flags: str):
         self.srcfile = srcfile
+        self.flags = flags
         self.db = Path(f'{self.srcfile.resolve()}.db')
         self.hashfile = self.srcfile.parent/f'.{self.db.name}.phash'
         self.stored = None
@@ -29,7 +30,7 @@ class Pmap(object):
         return bool(self.stored) and self.stored == self.observed
 
     def update(self):
-        cmd = [settings.POSTMAP_BIN, self.srcfile]
+        cmd = [settings.POSTMAP_BIN, *self.flags, self.srcfile]
         subprocess.run(cmd, check=True)
         self.read()
         self.hashfile.write_text(self.observed)
@@ -44,8 +45,8 @@ def modhash(*files: Path) -> str:
 def main():
     confdir = Path(sys.argv[1])
     pfx = f'[{Clrs.cyanLight("postmap")}]'
-    for filename in meta.pmapfiles:
-        pmap = Pmap(confdir/filename)
+    for filename, *flags in map(str.split, meta.pmapfiles):
+        pmap = Pmap(confdir/filename, *flags)
         pmap.read()
         if meta.forcemaps or not pmap.matches:
             print(pfx, Clrs.yellow(filename))
