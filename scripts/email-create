@@ -93,8 +93,8 @@ touch "$pwdfile" || exit 1
 ncolor="${cMagentaLight}${user}${cReset}"
 ecolor="${cMagentaLight}${login}${cReset}"
 
-if [[ "${#user}" -lt 5 ]] || [[ "${#user}" -gt 64 ]]; then
-    fail "Username must be between 5 and 64 chars"
+if [[ "${#user}" -lt 4 ]] || [[ "${#user}" -gt 64 ]]; then
+    fail "Username must be between 4 and 64 chars"
 fi
 
 regex="^[^.-][a-z0-9_.-]{2,63}$"
