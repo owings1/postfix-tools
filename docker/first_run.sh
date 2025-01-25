@@ -28,7 +28,6 @@ _run() {
 
     local dir_="$(abs "$(dirname "$0")")"
     local files_="$dir_/files"
-    alias metaval="$dir_/../scripts/helpers/metaval"
 
     # Create a default postmaster user, referenced in /etc/aliases, since Dovecot
     # does not route to root.
@@ -39,9 +38,6 @@ _run() {
 
     mkdir -pv "$CONFIG_REPO/files"
     pushdq "$CONFIG_REPO"
-
-    # meta.json
-    cp -nv "$files_/meta.json" .
 
     # Dovecot
     if is_dovecot ; then
@@ -84,7 +80,7 @@ _run() {
 
     # Dovecot auth files
     if is_dovecot ; then
-        local authdir="$(metaval auth.dir)"
+        local authdir="$AUTH_DIR"
         pwdfile="$authdir/users.passwd"
         mkdir -pv "$authdir"
         touch "$pwdfile"

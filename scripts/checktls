@@ -6,7 +6,7 @@ source "$(dirname "$0")/helpers/common.sh"
 
 declare -a servers
 if [[ -z "$1" ]]; then
-    host="$(hostname)"
+    host="$(postconf -h myhostname)"
     readarray -t ports < <(postfix_smtp_ports)
     if [[ "${#ports[@]}" = 0 ]]; then
         echo "${cRed}ERROR${cReset} No SMTP ports found" >&2

@@ -75,9 +75,7 @@ if [[ -z "$login" ]]; then
   soft_fail "$usage"
 fi
 
-dir_="$(abs `dirname "$0"`)"
-alias metaval="$dir_/helpers/metaval"
-authdir="$(metaval auth.dir)"
+authdir="$AUTH_DIR"
 pwdfile="$authdir/users.passwd"
 
 debug "login=$login"
@@ -94,7 +92,7 @@ fi
 if [[ ! -z "$deletemail" ]]; then
   mboxval="$(grep -i "^$login:" "$pwdfile" | awk -F: '{print $6}')"
   if [[ "${mboxval}" =~ 'Maildir/' ]]; then
-    maildir="$(metaval auth.emaildir)"
+    maildir="$AUTH_EMAILDIR"
     homedir="$(dirname "$maildir/$mboxval")"
     hdircolor="${cCyanLight}${homedir}${cReset}"
     debug "homedir=$homedir"

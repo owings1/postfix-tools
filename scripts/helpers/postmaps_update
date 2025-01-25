@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 import subprocess
-import sys
 from pathlib import Path
 
 import settings
-from common import Clrs, md5file, meta
+from common import Clrs, md5file, meta, postconf
 
 
 class Pmap(object):
@@ -43,12 +42,12 @@ def modhash(*files: Path) -> str:
     return str(tuple(map(modstat, files)))
 
 def main():
-    confdir = Path(sys.argv[1])
+    confdir = Path(postconf('-h', 'config_directory'))
     pfx = f'[{Clrs.cyanLight("postmap")}]'
     for filename, *flags in map(str.split, meta.pmapfiles):
         pmap = Pmap(confdir/filename, *flags)
         pmap.read()
-        if meta.forcemaps or not pmap.matches:
+        if settings.FORCE_MAPS or not pmap.matches:
             print(pfx, Clrs.yellow(filename))
             pmap.update()
 

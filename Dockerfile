@@ -57,6 +57,6 @@ WORKDIR /source
 COPY . /app
 VOLUME /source
 VOLUME /var/mail
-VOLUME /etc/auth
+VOLUME /opt/auth
 RUN /app/docker/install.sh
 CMD ["/bin/bash", "/app/docker/start.sh"]

@@ -3,9 +3,5 @@
 set -e
 
 source "$(dirname "$0")/helpers/common.sh"
-
-thisdir="$(abs `dirname "$0"`)"
-alias metaval="$thisdir/helpers/metaval"
-pwdfile="$(metaval auth.dir)/users.passwd"
-
+pwdfile="$AUTH_DIR/users.passwd"
 awk -F: '{print $1}' "$pwdfile" | sort

@@ -6,12 +6,13 @@ if [[ -e /etc/postfix/environment ]]; then
     . /etc/postfix/environment
 fi
 
-if [[ -z "$CONFIG_REPO" ]]; then
-    CONFIG_REPO="/etc/postfix/repo"
-fi
-if [[ -z "$DKIM_KEYS_DIR" ]]; then
-    DKIM_KEYS_DIR="/etc/opendkim/keys"
-fi
+[[ -n "$CONFIG_REPO" ]] || CONFIG_REPO=/opt/config
+[[ -n "$DKIM_KEYS_DIR" ]] || DKIM_KEYS_DIR=/opt/dkim
+[[ -n "$AUTH_DIR" ]] || AUTH_DIR=/opt/auth
+[[ -n "$AUTH_ALG" ]] || AUTH_ALG=SHA512-CRYPT
+[[ -n "$AUTH_UID" ]] || AUTH_UID=600
+[[ -n "$AUTH_GID" ]] || AUTH_GID=515
+[[ -n "$AUTH_EMAILDIR" ]] || AUTH_EMAILDIR=/var/mail
 
 alias doveadm=/usr/bin/doveadm
 alias doveconf=/usr/bin/doveconf

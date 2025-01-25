@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -9,37 +10,28 @@ from typing import Any
 import settings
 
 
-class AppMeta(object):
+class AppMeta:
+
+    defaults = {
+        "pmapfiles": [
+            "client_checks",
+            "sender_checks",
+            "local_dsn_filter",
+            "virtual"
+        ],
+        "ignorekeys": [
+            "maillog_file"
+        ]
+    }
+
     def __init__(self):
-        self.defaults = _read_json(settings.META_DEFAULTS_FILE)
-        self.srcdir = settings.CONFIG_REPO
-        self.filesdir = self.srcdir/'files'
-        metafile = self.srcdir/'meta.json'
+        metafile = settings.CONFIG_REPO/'meta.json'
         data = dict(self.defaults)
         if metafile.exists():
-            usermeta = _read_json(metafile)
-            data.update(usermeta)
-            data['auth'] = dict(self.defaults['auth'])
-            data['auth'].update(usermeta.get('auth', {}))
+            data.update(_read_json(metafile))
         self.pmapfiles: list[str] = data['pmapfiles']
         self.ignorekeys = set(data['ignorekeys'])
         self.ignorekeys.add('config_directory')
-        self.force = settings.FORCE
-        self.forcefiles = settings.FORCE_FILES
-        self.forceconfig = settings.FORCE_CONFIG
-        self.forcemaps = settings.FORCE_MAPS
-        self.auth = data['auth']
-        self.data = data
-
-def _read_json(file: Path) -> dict[str, Any]:
-    with file.open() as f:
-        return json.load(f)
-
-meta = AppMeta()
-
-
-def md5file(file: Path) -> str:
-    return hashlib.md5(file.read_bytes()).hexdigest()
 
 class Clrs(str, Enum):
     reset = '\x1b[0m'
@@ -69,3 +61,18 @@ class Clrs(str, Enum):
         return f'{self}{text}{self.reset}'
 
     __call__ = wrap
+
+
+def _read_json(file: Path) -> dict[str, Any]:
+    with file.open() as f:
+        return json.load(f)
+
+def postconf(*args) -> str:
+    cmd = [settings.POSTCONF_BIN, *args]
+    proc = subprocess.run(cmd, capture_output=True, check=True, text=True)
+    return proc.stdout.strip()
+
+def md5file(file: Path) -> str:
+    return hashlib.md5(file.read_bytes()).hexdigest()
+
+meta = AppMeta()

@@ -1,7 +1,4 @@
 #!/bin/bash
-
-source "$(dirname "$0")/helpers/common.sh"
-
-dir_="$(abs `dirname "$0"`)"
-conf_="$(postconf -h config_directory)"
-"$dir_/helpers/postmaps_update" "$conf_"
+dir_="$(dirname "$0")"
+source "$dir_/helpers/common.sh"
+"$dir_/helpers/postmaps_update"

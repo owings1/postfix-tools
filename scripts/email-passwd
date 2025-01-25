@@ -4,11 +4,7 @@ set -e
 
 source "$(dirname "$0")/helpers/common.sh"
 
-thisdir="$(abs `dirname "$0"`)"
-alias metaval="$thisdir/helpers/metaval"
-authdir="$(metaval auth.dir)"
-pwdfile="$authdir/users.passwd"
-alg="$(metaval auth.alg)"
+pwdfile="$AUTH_DIR/users.passwd"
 
 username="$1"
 if [[ -z "$username" ]] || [[ ! -z "$2" ]] && [[ "$2" != "--stdin" ]]; then
@@ -42,7 +38,7 @@ fi
 check_okpassword "$password"
 
 printf -v input '%s\n%s\n' "$password" "$password"
-pwdhash="$(doveadm pw -s "$alg" -u "$username" <<< "$input")"
+pwdhash="$(doveadm pw -s "$AUTH_ALG" -u "$username" <<< "$input")"
 cp "$pwdfile" "$pwdfile~"
 sed -E -i "s'^$username:[^:]*:(.*)'$username:$pwdhash:\1'" "$pwdfile"
 

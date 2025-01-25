@@ -71,8 +71,7 @@ else
 fi
 
 dir_="$(abs `dirname "$0"`)"
-alias metaval="$dir_/helpers/metaval"
-authdir="$(metaval auth.dir)"
+authdir="$AUTH_DIR"
 pwdfile="$authdir/users.passwd"
 
 debug "smtponly=$smtponly"
@@ -147,10 +146,10 @@ fi
 
 if [[ -z "$smtponly" ]]; then
 
-    gid="$(metaval auth.gid)"
-    uid="$(metaval auth.uid)"
-    alg="$(metaval auth.alg)"
-    maildir="$(metaval auth.emaildir)"
+    gid="$AUTH_GID"
+    uid="$AUTH_UID"
+    alg="$AUTH_ALG"
+    maildir="$AUTH_EMAILDIR"
 
     domaindir="$maildir/$domain"
     debug "domaindir=$domaindir"

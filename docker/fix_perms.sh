@@ -3,7 +3,6 @@
 set -e
 
 source "$(dirname "$0")/../scripts/helpers/common.sh"
-alias metaval="$(dirname "$0")/../scripts/helpers/metaval"
 
 chown root:syslog /var/log
 chmod 0775 /var/log
@@ -43,13 +42,9 @@ chown root:postdrop \
 popdq
 
 if is_dkim_enabled; then
-    chown -R opendkim:opendkim /etc/opendkim
     mkdir -p /var/spool/postfix/opendkim
     chown opendkim:postfix /var/spool/postfix/opendkim
     chmod 0775 /var/spool/postfix/opendkim
 fi
 
-maildir="$(metaval auth.emaildir)"
-uid="$(metaval auth.uid)"
-gid="$(metaval auth.gid)"
-chown -R "$uid:$gid" "$maildir"
+chown -R "$AUTH_UID:$AUTH_GID" "$AUTH_EMAILDIR"

@@ -9,7 +9,8 @@ from pathlib import Path
 from shutil import copy2 as copy
 from typing import Iterable
 
-from common import md5file, meta
+import settings
+from common import md5file
 
 
 class Result(object):
@@ -59,11 +60,11 @@ def main():
         dest = destdir/fname
         res = Result(src, dest)
         res.build()
-        if not res.is_same or meta.forcefiles:
+        if not res.is_same or settings.FORCE_FILES:
             results.append(res)
     added = [res.src for res in results if res.info['is_new']]
     changed = [res.src for res in results if res.info['is_update']]
-    forced = [res.src for res in results if meta.forcefiles and res.info['is_same']]
+    forced = [res.src for res in results if settings.FORCE_FILES and res.info['is_same']]
     allmod = set(added).union(changed).union(forced)
     if allmod:
         commitfile.write_text(cppatch(commitdir, destdir, allmod))
