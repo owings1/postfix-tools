@@ -16,8 +16,11 @@ order_keys: dict[str, OrderKeyType] = dict(
     size_asc=((lambda x: x.num_addresses), False),
     size_desc=((lambda x: x.num_addresses), True))
 
-def keyopt(value: str) -> OrderKeyType:
-    return order_keys[value]
+def keyopt(value: str) -> list[str]:
+    try:
+        return list({key: order_keys[key] for key in value.split(',')})
+    except KeyError:
+        raise ValueError
 
 class Parser(ArgumentParser):
     description = "Collapse CIDRs from files or stdin"
@@ -27,7 +30,7 @@ class Parser(ArgumentParser):
         arg = self.add_argument
         arg('files', nargs='*', help='Input files. If omitted, reads from stdin')
         arg('--sort', '-s', action='store_true', help='Sort the output')
-        arg('--key', '-k', default=None, choices=list(order_keys), help='Order key, default net_asc')
+        arg('--key', '-k', type=keyopt, dest='keys', help='Order key(s), default net_asc')
         arg('--compact', '-c', action='store_true', help='Omit prefix length for single addresses')
 
 def nocomment(s: str) -> bool:
@@ -51,10 +54,10 @@ def main(args=None) -> None:
         fams: list[list[Net]] = [
             list(collapse_addresses(filter(lambda x: isinstance(x, nettype), nets)))
             for nettype in (IPv4Network, IPv6Network)]
-    if opts.sort or opts.key:
-        key, reverse = order_keys.get(opts.key, 'net_asc')
-        for fam in fams:
-            fam.sort(key=key, reverse=reverse)
+    if opts.sort or opts.keys:
+        for key, reverse in map(order_keys.get, reversed(opts.keys or ['net_asc'])):
+            for fam in fams:
+                fam.sort(key=key, reverse=reverse)
         if reverse:
             fams.reverse()
     it = chain(*fams)
