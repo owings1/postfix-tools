@@ -27,7 +27,7 @@ class Parser(ArgumentParser):
         arg = self.add_argument
         arg('files', nargs='*', help='Input files. If omitted, reads from stdin')
         arg('--sort', '-s', action='store_true', help='Sort the output')
-        arg('--key', '-k', type=keyopt, default=None, choices=list(order_keys), help='Order key, default net_asc')
+        arg('--key', '-k', default=None, choices=list(order_keys), help='Order key, default net_asc')
         arg('--compact', '-c', action='store_true', help='Omit prefix length for single addresses')
 
 def nocomment(s: str) -> bool:
@@ -52,7 +52,7 @@ def main(args=None) -> None:
             list(collapse_addresses(filter(lambda x: isinstance(x, nettype), nets)))
             for nettype in (IPv4Network, IPv6Network)]
     if opts.sort or opts.key:
-        key, reverse = opts.key or order_keys['net_asc']
+        key, reverse = order_keys.get(opts.key, 'net_asc')
         for fam in fams:
             fam.sort(key=key, reverse=reverse)
         if reverse:
