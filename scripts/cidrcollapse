@@ -5,7 +5,19 @@ import fileinput
 from argparse import ArgumentParser
 from ipaddress import IPv4Network, IPv6Network, collapse_addresses, ip_network
 from itertools import chain
+from typing import Callable, Any
 
+type Net = IPv4Network|IPv6Network
+type OrderKeyType = tuple[Callable[[Net], Any], bool]
+
+order_keys: dict[str, OrderKeyType] = dict(
+    net_asc=((lambda x: x), False),
+    net_desc=((lambda x: x), True),
+    size_asc=((lambda x: x.num_addresses), False),
+    size_desc=((lambda x: x.num_addresses), True))
+
+def keyopt(value: str) -> OrderKeyType:
+    return order_keys[value]
 
 class Parser(ArgumentParser):
     description = "Collapse CIDRs from files or stdin"
@@ -15,13 +27,13 @@ class Parser(ArgumentParser):
         arg = self.add_argument
         arg('files', nargs='*', help='Input files. If omitted, reads from stdin')
         arg('--sort', '-s', action='store_true', help='Sort the output')
-        arg('--reverse', '-r', action='store_true', help='Reverse sort the output')
+        arg('--key', '-k', type=keyopt, default=None, choices=list(order_keys), help='Order key, default net_asc')
         arg('--compact', '-c', action='store_true', help='Omit prefix length for single addresses')
 
 def nocomment(s: str) -> bool:
     return not s.startswith('#')
 
-def compact(value: IPv4Network|IPv6Network) -> str:
+def compact(value: Net) -> str:
     if value.num_addresses == 1:
         value, = value.hosts()
     return str(value)
@@ -30,23 +42,21 @@ def main(args=None) -> None:
     parser = Parser()
     parser.add_arguments()
     opts = parser.parse_args(args)
-    opts.sort |= opts.reverse
     with fileinput.input(opts.files, encoding='utf-8') as file:
         it = map(str.strip, file)
         it = filter(None, it)
         it = filter(nocomment, it)
         it = map(ip_network, it)
         nets = list(it)
-        it4 = filter(lambda x: isinstance(x, IPv4Network), nets)
-        it6 = filter(lambda x: isinstance(x, IPv6Network), nets)
-        it4 = collapse_addresses(it4)
-        it6 = collapse_addresses(it6)
-        fams = [list(it4), list(it6)]
-    if opts.sort:
+        fams: list[list[Net]] = [
+            list(collapse_addresses(filter(lambda x: isinstance(x, nettype), nets)))
+            for nettype in (IPv4Network, IPv6Network)]
+    if opts.sort or opts.key:
+        key, reverse = opts.key or order_keys['net_asc']
         for fam in fams:
-            fam.sort(reverse=opts.reverse)
-    if opts.reverse:
-        fams.reverse()
+            fam.sort(key=key, reverse=reverse)
+        if reverse:
+            fams.reverse()
     it = chain(*fams)
     if opts.compact:
         it = map(compact, it)

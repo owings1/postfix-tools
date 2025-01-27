@@ -59,7 +59,7 @@ alias o_stdin=false
 
 while [[ "$#" -gt 0 ]]; do
   case "$1" in
-    -h|--help) printf '%s\n%s' "$usage" "$help"; exit 0;;
+    -h|--help) printf '%s\n%s' "$usage" "$help"; cleanup; exit 0;;
     -i|--stdin) alias o_stdin=true;;
     -*) fail "Unknown option: $1";;
     *) true;
@@ -79,17 +79,22 @@ if ! o_stdin && [[ ! -e "$fips" ]]; then
   soft_fail "$usage"
 fi
 
-dbs=($(postconf -xh postscreen_access_list | grep '^cidr:'))
+dbs=()
+vals=($(postconf -xh postscreen_access_list))
+for val in "${vals[@]}"; do
+  if grep -q '^cidr:' <<<$val; then
+    dbs+=($(sed 's~^cidr:~~' <<<$val))
+  fi
+done
 
 do-lookups() {
-  local db ip fname found res
+  local db ip found res
   while read ip ; do
     found=0
     for db in "${dbs[@]}" ; do
-      fname="$(awk -F: '{print $NF}' <<< "$db")"
-      res="$(postmap -q "$ip" "$db")"
+      res="$(postmap -q "$ip" "cidr:$db")"
       if [[ "$?" = 0 ]]; then
-        echo "$ip $res $fname" | clr
+        echo "$ip $res $db" | clr
         found=1
       fi
     done
